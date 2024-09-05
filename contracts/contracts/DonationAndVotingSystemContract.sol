@@ -7,7 +7,20 @@ import "./AwardContract.sol";
 import "./StringHelper.sol";
 
 /*
-
+    在该合约中，共有2个结构，即Donation和Vote，分别代表捐赠和投票
+    系统的功能逻辑为：
+    1. 首先新注册的用户可以免费领取一些金币（即gold，也就是原系统的TP通证积分），因为创建一个donation需要消耗一定数额的gold
+    2. 用户在领取之后，可以创建一个donation并设定该donation的开始时间、结束时间和描述
+    3. 创建donation会消耗一定数额的gold，如果用户的gold不足则无法创建
+    4. 当donation创建后，其它用户（包括自己）可以给该donation进行voting
+    5. voting时，需要donation在有效的时间区间内
+    6. 每个用户对一个donation仅可进行一次voting，无论approval还是reject
+    7. 如果voting为approval，则消耗voter的一定数量的gold
+    8. 如果voting为reject，则不消耗gold
+    9. donation的时间结束后，进行结果统计
+    10. 如果approved >= rejected，则将用户创建donation时花费的gold和其他用户voting时花费的gold全部return给该用户
+    11. 如果approved < rejected，则将其他用户voting时花费的gold全部返回，且该用户创建donation时花费的gold不予返回（作为惩罚）
+    12. (optional)用户每3个成功的donation都会获得纪念品奖励
 */
 
 // 合约：捐赠与投票系统合约
