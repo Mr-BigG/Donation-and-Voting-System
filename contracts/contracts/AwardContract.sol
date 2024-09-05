@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import {VotingSystemContract} from "./DonationAndVotingSystemContract.sol";
 
 // 合约：奖励合约
 contract AwardContract is ERC721URIStorage {
@@ -34,9 +33,12 @@ contract AwardContract is ERC721URIStorage {
     }
 
     // 给某个用户发放纪念品（奖励）
-    function awardItem(address user, string memory token_URI) public view {
-        require(msg.sender == manager, "只有系统可以访问此函数(awardTime)");
-        require(claimed_get_awards_user_list[token_URI][msg.sender] == false, "您已获得此奖励");
+    function awardItem(address user, string memory token_URI) public {
+        // Solidity需要将中文进行unicode转码
+        // 只有系统可以访问此函数(awardTime) => \u53ea\u6709\u7cfb\u7edf\u53ef\u4ee5\u8bbf\u95ee\u6b64\u51fd\u6570(awardTime)
+        require(msg.sender == manager, "\u53ea\u6709\u7cfb\u7edf\u53ef\u4ee5\u8bbf\u95ee\u6b64\u51fd\u6570(awardTime)");
+        // 您已获得此奖励 => \u60a8\u5df2\u83b7\u5f97\u6b64\u5956\u52b1
+        require(claimed_get_awards_user_list[token_URI][msg.sender] == false, "");
 
         // 将该用户设定为已获取纪念品(奖励)
         claimed_get_awards_user_list[token_URI][user] = true;
@@ -54,7 +56,7 @@ contract AwardContract is ERC721URIStorage {
         _token_ids.increment();
 
         // 将新的纪念品记录下来
-        Award memory new_award = Awards({
+        Award memory new_award = Award({
             item_id: new_item_id,
             token_URI: token_URI,
             award_time:block.timestamp

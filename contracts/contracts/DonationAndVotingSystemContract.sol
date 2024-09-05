@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "./GoldContract.sol";
@@ -94,10 +94,15 @@ contract DonationAndVotingSystemContract {
 
     // 发起一个新的捐赠
     function addNewDonation(string calldata content, uint start_time, uint end_time) public {
-        require(start_time < end_time, "开始时间必须小于结束时间");
-        require(end_time > block.timestamp, "结束时间必须在未来");
-        require(gold.balanceOf(msg.sender) >= _donations.gold_consume_by_donation, "余额不足，无法提起新的捐赠");
-        require(gold.allowance(msg.sender, address(this)) >= _donations.gold_consume_by_donation, "系统对你的金币没有权限。请授权。");
+        // Solidity需要将中文进行unicode转码
+        // 开始时间必须小于结束时间 => \u60a8\u5df2\u5f00\u59cb\u65f6\u95f4\u5fc5\u987b\u5c0f\u4e8e\u7ed3\u675f\u65f6\u95f4
+        require(start_time < end_time, "\u60a8\u5df2\u5f00\u59cb\u65f6\u95f4\u5fc5\u987b\u5c0f\u4e8e\u7ed3\u675f\u65f6\u95f4");
+        // 结束时间必须在未来 => \u7ed3\u675f\u65f6\u95f4\u5fc5\u987b\u5728\u672a\u6765
+        require(end_time > block.timestamp, "\u7ed3\u675f\u65f6\u95f4\u5fc5\u987b\u5728\u672a\u6765");
+        // 余额不足，无法提起新的捐赠 => \u4f59\u989d\u4e0d\u8db3\uff0c\u65e0\u6cd5\u63d0\u8d77\u65b0\u7684\u6350\u8d60
+        require(gold.balanceOf(msg.sender) >= _donations.gold_consume_by_donation, "\u4f59\u989d\u4e0d\u8db3\uff0c\u65e0\u6cd5\u63d0\u8d77\u65b0\u7684\u6350\u8d60");
+        // 系统对你的金币没有权限。请授权。 => \u7cfb\u7edf\u5bf9\u4f60\u7684\u91d1\u5e01\u6ca1\u6709\u6743\u9650\u3002\u8bf7\u6388\u6743\u3002
+        require(gold.allowance(msg.sender, address(this)) >= _donations.gold_consume_by_donation, "");
 
         gold.transferFrom(msg.sender, address(this), _donations.gold_consume_by_donation); // 委托本合约把用户的金币转账给本合约（需要前端提前委托）
 
@@ -158,7 +163,8 @@ contract DonationAndVotingSystemContract {
 
     // 捐赠的信息
     function getDonationInfo(uint id, uint time_now) public view returns (string memory, address, uint, uint, uint) {
-        require(_donations.get_donation_with_id[id].is_valid == true, "这个捐赠不存在"); // 判断该捐赠是否存在
+        // 这个捐赠不存在 => \u8fd9\u4e2a\u6350\u8d60\u4e0d\u5b58\u5728
+        require(_donations.get_donation_with_id[id].is_valid == true, "\u8fd9\u4e2a\u6350\u8d60\u4e0d\u5b58\u5728"); // 判断该捐赠是否存在
 
         uint status = uint(getDonationStatus(id, time_now)); // 捐赠的状态
         string memory content = _donations.get_donation_with_id[id].content; // 捐赠的内容
@@ -166,7 +172,7 @@ contract DonationAndVotingSystemContract {
         uint vote_start_time = _donations.get_donation_with_id[id].vote_start_time; // 捐赠的发起时间
         uint vote_end_time = _donations.get_donation_with_id[id].vote_end_time; // 捐赠的结束时间
 
-        return (content, sender, vote_start_time, vote_end_time);
+        return (content, sender, vote_start_time, vote_end_time, status);
     }
 
     // 发布捐赠需要消耗的金币数量
@@ -176,7 +182,8 @@ contract DonationAndVotingSystemContract {
 
     // 捐赠的状态
     function getDonationStatus(uint id) public view returns (DonationStatus) {
-        require(_donations.get_donation_with_id[id].is_valid == true, "这个捐赠不存在");
+        // 这个捐赠不存在 => \u8fd9\u4e2a\u6350\u8d60\u4e0d\u5b58\u5728
+        require(_donations.get_donation_with_id[id].is_valid == true, "\u8fd9\u4e2a\u6350\u8d60\u4e0d\u5b58\u5728");
 
         // 检查是否超时
         if (block.timestamp > _donations.get_donation_with_id[id].vote_end_time) {
@@ -218,7 +225,8 @@ contract DonationAndVotingSystemContract {
 
     // 捐赠状态（使用外部传入的时间戳）
     function getDonationStatus(uint id, uint time_now) public view returns (DonationStatus) {
-        require(_donations.get_donation_with_id[id].is_valid == true, "这个捐赠不存在");
+        // 这个捐赠不存在 => \u8fd9\u4e2a\u6350\u8d60\u4e0d\u5b58\u5728
+        require(_donations.get_donation_with_id[id].is_valid == true, "\u8fd9\u4e2a\u6350\u8d60\u4e0d\u5b58\u5728");
 
         // 检查捐赠是否超时
         if (time_now > _donations.get_donation_with_id[id].vote_end_time) {
@@ -257,9 +265,28 @@ contract DonationAndVotingSystemContract {
         }
     }
 
-    // 用户是否可以领取gold金币奖励
+    // 用户是否可以领取gold奖励
+    function getWhetherUserCanGetGoldReward(uint id, uint time_now) public view returns (bool) {
+        // 这个捐赠不存在 => \u8fd9\u4e2a\u6350\u8d60\u4e0d\u5b58\u5728
+        require(_donations.get_donation_with_id[id].is_valid == true, "\u8fd9\u4e2a\u6350\u8d60\u4e0d\u5b58\u5728");
+
+        if (_donations.get_donation_with_id[id].sender != msg.sender) {
+            return false;
+        }
+
+        if (getDonationStatus(id, time_now) == DonationStatus.is_approved && _donations.get_donation_with_id[id].is_get_gold_reward == false) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+
+    // 领取gold金币奖励
     function getGoldRewardFromDonationApproved(uint id) public {
-        require(getWhetherUserCanGetAward(id, block.timestamp) == true, "由于一些原因，你无法获得金币奖励");
+        // 由于一些原因，你无法获得金币奖励 => \u7531\u4e8e\u4e00\u4e9b\u539f\u56e0\uff0c\u4f60\u65e0\u6cd5\u83b7\u5f97\u91d1\u5e01\u5956\u52b1
+        require(getWhetherUserCanGetGoldReward(id, block.timestamp) == true, "\u7531\u4e8e\u4e00\u4e9b\u539f\u56e0\uff0c\u4f60\u65e0\u6cd5\u83b7\u5f97\u91d1\u5e01\u5956\u52b1");
 
         _donations.get_donation_with_id[id].is_get_gold_reward = true;
         // 统计捐赠情况
@@ -284,25 +311,25 @@ contract DonationAndVotingSystemContract {
     }
 
     // 用户是否可以领取纪念品奖励
-    function getWhetherUserCanGetAward(uint time_now) public view returns (bool) {
-        // 检查捐赠发起人捐赠提议的数量
+    function getWhetherUserCanGetAwardReward(uint time_now) public view returns (bool) {
+        // 捐赠发起人成功捐赠的数量
         uint[] memory ids = getUserDonationIds();
-        uint i;
-        uint num_of_donation_approved = 0;
-        for (i = 0; i < ids.length; i++) {
-            if (getDonationStatus(ids[i], time_now) == DonationStatus.is_approved) {
-                num_of_donation_approved++;
+        uint j;
+        uint num_of_Donations_approved = 0;
+        for (j = 0; j < ids.length; j++) {
+            if (getDonationStatus(ids[j], time_now) == DonationStatus.is_approved) {
+                num_of_Donations_approved++;
             }
         }
 
-        // 捐赠发起人是否有3个及以上的成功捐赠
-        if (num_of_donation_approved >= 3) {
+        // 检查捐赠发起人是否有3个及以上的成功捐赠
+        if (num_of_Donations_approved >= 3) {
             // 每3个捐赠发放一次纪念品（奖励）
-            uint num_of_award = num_of_donation_approved / 3;
-            uint j;
-            for (j = 0; j <= num_of_award; j++) {
-                // 检查是否已经领取过某种纪念品（奖励）
-                if (awards.getWhetherUserCanGetAward(msg.sender, StringHelper.sprintf("成就：已批准 %u 个捐赠", j * 3))) {
+            uint num_of_award = num_of_Donations_approved / 3;
+            uint i;
+            for (i = 1; i <= num_of_award; i++) {
+                // 成就：已批准 %u 个捐赠 => \u7531\u4e8e\u4e00\u4e9b\u539f\u56e0\uff0c\u4f60\u65e0\u6cd5\u83b7\u5f97\u91d1\u5e01\u5956\u52b1
+                if (awards.getWhetherUserCanGetAward(msg.sender, StringHelper.sprintf("\u7531\u4e8e\u4e00\u4e9b\u539f\u56e0\uff0c\u4f60\u65e0\u6cd5\u83b7\u5f97\u91d1\u5e01\u5956\u52b1", i * 3))) {
                     return true;
                 } else {
                     continue;
@@ -316,7 +343,8 @@ contract DonationAndVotingSystemContract {
 
     // 纪念品（奖励）
     function getAward() public {
-        require(getWhetherUserCanGetAward(block.timestamp) == true, "由于一些原因，你无法获得金币奖励");
+        // 由于一些原因，你无法获得金币奖励 => \u7531\u4e8e\u4e00\u4e9b\u539f\u56e0\uff0c\u4f60\u65e0\u6cd5\u83b7\u5f97\u91d1\u5e01\u5956\u52b1
+        require(getWhetherUserCanGetAwardReward(block.timestamp) == true, "\u7531\u4e8e\u4e00\u4e9b\u539f\u56e0\uff0c\u4f60\u65e0\u6cd5\u83b7\u5f97\u91d1\u5e01\u5956\u52b1");
 
         // 捐赠发起人的成功捐赠的数量
         uint[] memory ids = getUserDonationIds();
@@ -335,8 +363,9 @@ contract DonationAndVotingSystemContract {
             uint j;
             for (j = 0; j <= num_of_award; j++) {
                 // 是否已经领取过某种纪念品
-                if (awards.getWhetherUserCanGetAward(msg.sender, StringHelper.sprintf("成就：已批准 %u 个捐赠", j * 3))) {
-                    awards.awardItem(msg.sender, StringHelper.sprintf("成就：已批准 %u 个捐赠", j * 3));
+                // 成就：已批准 %u 个捐赠 => \u7531\u4e8e\u4e00\u4e9b\u539f\u56e0\uff0c\u4f60\u65e0\u6cd5\u83b7\u5f97\u91d1\u5e01\u5956\u52b1
+                if (awards.getWhetherUserCanGetAward(msg.sender, StringHelper.sprintf("\u7531\u4e8e\u4e00\u4e9b\u539f\u56e0\uff0c\u4f60\u65e0\u6cd5\u83b7\u5f97\u91d1\u5e01\u5956\u52b1", j * 3))) {
+                    awards.awardItem(msg.sender, StringHelper.sprintf("\u7531\u4e8e\u4e00\u4e9b\u539f\u56e0\uff0c\u4f60\u65e0\u6cd5\u83b7\u5f97\u91d1\u5e01\u5956\u52b1", j * 3));
                 } else {
                     continue;
                 }
@@ -346,10 +375,14 @@ contract DonationAndVotingSystemContract {
 
     // 发起一个新的投票
     function voteOnDonation(uint user_vote, uint id) public {
-        require(getDonationStatus(id) == DonationStatus.is_being_voted_on, "投票已关闭，无法投票");
-        require(_votes.get_vote_with_address_and_id[msg.sender][id].length < _votes.max_voting_times, "已超过最大投票次数，无法投票");
-        require(gold.balanceOf(msg.sender) >= _votes.gold_consume_by_vote, "余额不足，无法投票");
-        require(gold.allowance(msg.sender, address(this)) >= _votes.gold_consume_by_vote, "系统对你的金币没有权限。请授权。");
+        // 投票已关闭，无法投票 => \u6295\u7968\u5df2\u5173\u95ed\uff0c\u65e0\u6cd5\u6295\u7968
+        require(getDonationStatus(id) == DonationStatus.is_being_voted_on, "\u6295\u7968\u5df2\u5173\u95ed\uff0c\u65e0\u6cd5\u6295\u7968");
+        // 已超过最大投票次数，无法投票 => \u5df2\u8d85\u8fc7\u6700\u5927\u6295\u7968\u6b21\u6570\uff0c\u65e0\u6cd5\u6295\u7968
+        require(_votes.get_vote_with_address_and_id[msg.sender][id].length < _votes.max_voting_times, "\u5df2\u8d85\u8fc7\u6700\u5927\u6295\u7968\u6b21\u6570\uff0c\u65e0\u6cd5\u6295\u7968");
+        // 余额不足，无法投票 => \u4f59\u989d\u4e0d\u8db3\uff0c\u65e0\u6cd5\u6295\u7968
+        require(gold.balanceOf(msg.sender) >= _votes.gold_consume_by_vote, "\u4f59\u989d\u4e0d\u8db3\uff0c\u65e0\u6cd5\u6295\u7968");
+        // 系统对你的金币没有权限。请授权。 => \u7cfb\u7edf\u5bf9\u4f60\u7684\u91d1\u5e01\u6ca1\u6709\u6743\u9650\u3002\u8bf7\u6388\u6743\u3002
+        require(gold.allowance(msg.sender, address(this)) >= _votes.gold_consume_by_vote, "\u7cfb\u7edf\u5bf9\u4f60\u7684\u91d1\u5e01\u6ca1\u6709\u6743\u9650\u3002\u8bf7\u6388\u6743\u3002");
 
         gold.transferFrom(msg.sender, address(this), _votes.gold_consume_by_vote); // 委托本合约把用户的金币gold转账给本合约（需要前端提前委托）
 
@@ -411,7 +444,7 @@ contract DonationAndVotingSystemContract {
         uint i;
         uint count = 0;
         for (i = 0; i < _votes.user_addresses.length; i++) {
-            Vote[] memory user_votes = _votes.get_vote_with_address_and_id[_votes.user_addresses[i][id]];
+            Vote[] memory user_votes = _votes.get_vote_with_address_and_id[msg.sender][_donations.donation_ids[i]];
             if (user_votes.length > 0) {
                 count++;
             }
