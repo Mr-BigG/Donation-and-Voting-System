@@ -1,6 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// 来源：https://github.com/FORT-Protocol/FORT-V1.1/blob/nest4.0/contracts/libs/StringHelper.sol
+// 主要功能：字符串方法
 pragma solidity ^0.8.6;
-
-// 此sol文件的主要功能是字符串方法
 
 /// @dev String tools
 library StringHelper {
@@ -8,7 +9,7 @@ library StringHelper {
     /// @dev Convert to upper case
     /// @param str Target string
     /// @return Upper case result
-    function toUpper(string memory str) internal pure returns (string memory)
+    function toUpper(string memory str) internal pure returns (string memory) 
     {
         bytes memory bs = bytes(str);
         for (uint i = 0; i < bs.length; ++i) {
@@ -23,7 +24,7 @@ library StringHelper {
     /// @dev Convert to lower case
     /// @param str Target string
     /// @return Lower case result
-    function toLower(string memory str) internal pure returns (string memory)
+    function toLower(string memory str) internal pure returns (string memory) 
     {
         bytes memory bs = bytes(str);
         for (uint i = 0; i < bs.length; ++i) {
@@ -40,7 +41,7 @@ library StringHelper {
     /// @param start Start index in target string
     /// @param count Count of result. if length not enough, returns remain.
     /// @return Substring result
-    function substring(string memory str, uint start, uint count) internal pure returns (string memory)
+    function substring(string memory str, uint start, uint count) internal pure returns (string memory) 
     {
         bytes memory bs = bytes(str);
         uint length = bs.length;
@@ -61,7 +62,7 @@ library StringHelper {
     /// @param str Target string
     /// @param start Start index in target string
     /// @return Substring result
-    function substring(string memory str, uint start) internal pure returns (string memory)
+    function substring(string memory str, uint start) internal pure returns (string memory) 
     {
         bytes memory bs = bytes(str);
         uint length = bs.length;
@@ -83,7 +84,7 @@ library StringHelper {
     /// @param iv Target uint value
     /// @param minLength Minimal length
     /// @return New offset in target buffer
-    function writeUIntDec(bytes memory buffer, uint index, uint iv, uint minLength) internal pure returns (uint)
+    function writeUIntDec(bytes memory buffer, uint index, uint iv, uint minLength) internal pure returns (uint) 
     {
         uint i = index;
         minLength += index;
@@ -107,7 +108,7 @@ library StringHelper {
     /// @param fv Target float value
     /// @param decimals Decimal places
     /// @return New offset in target buffer
-    function writeFloat(bytes memory buffer, uint index, uint fv, uint decimals) internal pure returns (uint)
+    function writeFloat(bytes memory buffer, uint index, uint fv, uint decimals) internal pure returns (uint) 
     {
         uint base = 10 ** decimals;
         index = writeUIntDec(buffer, index, fv / base, 1);
@@ -116,7 +117,7 @@ library StringHelper {
 
         return index;
     }
-
+    
     /// @dev Write a uint in hexadecimal. If length less than minLength, fill with 0 front.
     /// @param buffer Target buffer
     /// @param index Start index in buffer
@@ -125,12 +126,12 @@ library StringHelper {
     /// @param upper If upper case
     /// @return New offset in target buffer
     function writeUIntHex(
-        bytes memory buffer,
-        uint index,
-        uint iv,
-        uint minLength,
+        bytes memory buffer, 
+        uint index, 
+        uint iv, 
+        uint minLength, 
         bool upper
-    ) internal pure returns (uint)
+    ) internal pure returns (uint) 
     {
         uint i = index;
         uint B = upper ? 55 : 87;
@@ -162,12 +163,12 @@ library StringHelper {
     /// @param count Count of string. if length not enough, use remain.
     /// @return New offset in target buffer
     function writeString(
-        bytes memory buffer,
-        uint index,
-        string memory str,
-        uint start,
+        bytes memory buffer, 
+        uint index, 
+        string memory str, 
+        uint start, 
         uint count
-    ) private pure returns (uint)
+    ) private pure returns (uint) 
     {
         bytes memory bs = bytes(str);
         uint i = 0;
@@ -183,7 +184,7 @@ library StringHelper {
     /// @param start Start index in buffer
     /// @param count Count of string. if length not enough, returns remain.
     /// @return Segment from buffer
-    function segment(bytes memory buffer, uint start, uint count) internal pure returns (bytes memory)
+    function segment(bytes memory buffer, uint start, uint count) internal pure returns (bytes memory) 
     {
         uint length = buffer.length;
         if (start >= length) {
@@ -225,7 +226,7 @@ library StringHelper {
     function sprintf(string memory format, uint arg0, uint arg1, uint arg2) internal pure returns (string memory) {
         return sprintf(format, [arg0, arg1, arg2, 0, 0]);
     }
-
+    
     /// @dev Format to memory buffer
     /// @param format Format string
     /// @param arg0 Argument 0. (string is need to encode with StringHelper.enc, and length can not great than 31)
@@ -248,7 +249,7 @@ library StringHelper {
     function sprintf(string memory format, uint arg0, uint arg1, uint arg2, uint arg3, uint arg4) internal pure returns (string memory) {
         return sprintf(format, [arg0, arg1, arg2, arg3, arg4]);
     }
-
+    
     /// @dev Format to memory buffer
     /// @param format Format string
     /// @param args Argument array. (string is need to encode with StringHelper.enc, and length can not great than 31)
@@ -266,9 +267,9 @@ library StringHelper {
     /// @param args Argument array. (string is need to encode with StringHelper.enc, and length can not great than 31)
     /// @return New index in buffer
     function sprintf(
-        bytes memory buffer,
-        uint index,
-        bytes memory format,
+        bytes memory buffer, 
+        uint index, 
+        bytes memory format, 
         uint[5] memory args
     ) internal pure returns (uint) {
 
@@ -280,7 +281,7 @@ library StringHelper {
 
         while (i < format.length) {
             uint c = uint(uint8(format[i]));
-            // 0. Normal
+			// 0. Normal                                             
             if (state == 0) {
                 // %
                 if (c == 37) {
@@ -291,7 +292,7 @@ library StringHelper {
                 }
                 ++i;
             }
-                // 1. Check if there is -
+			// 1. Check if there is -
             else if (state == 1) {
                 // %
                 if (c == 37) {
@@ -302,7 +303,7 @@ library StringHelper {
                     state = 3;
                 }
             }
-                // 3. Find with
+			// 3. Find with
             else if (state == 3) {
                 while (c >= 48 && c <= 57) {
                     w = w * 10 + c - 48;
@@ -310,8 +311,8 @@ library StringHelper {
                 }
                 state = 4;
             }
-                // 4. Find format descriptor
-            else if (state == 4) {
+            // 4. Find format descriptor   
+			else if (state == 4) {
                 uint arg = args[ai++];
                 // d
                 if (c == 100) {
@@ -327,15 +328,15 @@ library StringHelper {
                 if (c == 117) {
                     index = writeUIntDec(buffer, index, arg, w == 0 ? 1 : w);
                 }
-                    // x/X
+                // x/X
                 else if (c == 120 || c == 88) {
                     index = writeUIntHex(buffer, index, arg, w == 0 ? 1 : w, c == 88);
                 }
-                    // s/S
+                // s/S
                 else if (c == 115 || c == 83) {
                     index = writeEncString(buffer, index, arg, 0, w == 0 ? 31 : w, c == 83 ? 1 : 0);
                 }
-                    // f
+                // f
                 else if (c == 102) {
                     if (arg >> 255 == 1) {
                         buffer[index++] = bytes1(uint8(45));
@@ -394,10 +395,10 @@ library StringHelper {
     /// @param charCase 0: original case, 1: upper case, 2: lower case
     /// @return New index in buffer
     function writeEncString(
-        bytes memory buffer,
-        uint index,
-        uint v,
-        uint start,
+        bytes memory buffer, 
+        uint index, 
+        uint v, 
+        uint start, 
         uint count,
         uint charCase
     ) public pure returns (uint) {
@@ -441,9 +442,9 @@ library StringHelper {
     /// @param abiArgs byte array of arguments encoded by abi.encode()
     /// @return New index in buffer
     function sprintf(
-        bytes memory buffer,
-        uint index,
-        bytes memory format,
+        bytes memory buffer, 
+        uint index, 
+        bytes memory format, 
         bytes memory abiArgs
     ) internal pure returns (uint) {
 
@@ -455,7 +456,7 @@ library StringHelper {
 
         while (i < format.length) {
             uint c = uint(uint8(format[i]));
-            // 0. Normal
+			// 0. Normal                                             
             if (state == 0) {
                 // %
                 if (c == 37) {
@@ -466,7 +467,7 @@ library StringHelper {
                 }
                 ++i;
             }
-                // 1. Check if there is -
+			// 1. Check if there is -
             else if (state == 1) {
                 // %
                 if (c == 37) {
@@ -477,7 +478,7 @@ library StringHelper {
                     state = 3;
                 }
             }
-                // 3. Find width
+			// 3. Find width
             else if (state == 3) {
                 while (c >= 48 && c <= 57) {
                     w = w * 10 + c - 48;
@@ -485,8 +486,8 @@ library StringHelper {
                 }
                 state = 4;
             }
-                // 4. Find format descriptor
-            else if (state == 4) {
+            // 4. Find format descriptor   
+			else if (state == 4) {
                 uint arg = readAbiUInt(abiArgs, ai);
                 // d
                 if (c == 100) {
@@ -502,15 +503,15 @@ library StringHelper {
                 if (c == 117) {
                     index = writeUIntDec(buffer, index, arg, w == 0 ? 1 : w);
                 }
-                    // x/X
+                // x/X
                 else if (c == 120 || c == 88) {
                     index = writeUIntHex(buffer, index, arg, w == 0 ? 1 : w, c == 88);
                 }
-                    // s/S
+                // s/S
                 else if (c == 115 || c == 83) {
                     index = writeAbiString(buffer, index, abiArgs, arg, w == 0 ? 31 : w, c == 83 ? 1 : 0);
                 }
-                    // f
+                // f
                 else if (c == 102) {
                     if (arg >> 255 == 1) {
                         buffer[index++] = bytes1(uint8(45));
@@ -564,13 +565,13 @@ library StringHelper {
     /// @param charCase 0: original case, 1: upper case, 2: lower case
     /// @return New index in buffer
     function writeAbiString(
-        bytes memory buffer,
-        uint index,
-        bytes memory data,
-        uint start,
+        bytes memory buffer, 
+        uint index, 
+        bytes memory data, 
+        uint start, 
         uint count,
         uint charCase
-    ) internal pure returns (uint)
+    ) internal pure returns (uint) 
     {
         uint length = readAbiUInt(data, start);
         if (count > length) {

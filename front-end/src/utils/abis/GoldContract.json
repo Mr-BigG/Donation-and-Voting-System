@@ -239,6 +239,13 @@
     },
     {
       "inputs": [],
+      "name": "getGold",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "getInitialUserGold",
       "outputs": [
         {

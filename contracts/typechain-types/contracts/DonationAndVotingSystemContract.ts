@@ -30,11 +30,11 @@ export interface DonationAndVotingSystemContractInterface
     "awards()": FunctionFragment;
     "getAward()": FunctionFragment;
     "getDonationIds()": FunctionFragment;
-    "getDonationInfo(uint256,uint256)": FunctionFragment;
+    "getDonationInformation(uint256,uint256)": FunctionFragment;
     "getDonationStatus(uint256,uint256)": FunctionFragment;
     "getDonationStatus(uint256)": FunctionFragment;
-    "getDonationVotesInfo(uint256,uint256)": FunctionFragment;
-    "getGoldConsumeByDonation()": FunctionFragment;
+    "getDonationVotesInformation(uint256,uint256)": FunctionFragment;
+    "getGoldConsumedByDonation()": FunctionFragment;
     "getGoldConsumedByVote()": FunctionFragment;
     "getGoldRewardFromDonationApproved(uint256)": FunctionFragment;
     "getMaxVotingTimes()": FunctionFragment;
@@ -53,11 +53,11 @@ export interface DonationAndVotingSystemContractInterface
       | "awards"
       | "getAward"
       | "getDonationIds"
-      | "getDonationInfo"
+      | "getDonationInformation"
       | "getDonationStatus(uint256,uint256)"
       | "getDonationStatus(uint256)"
-      | "getDonationVotesInfo"
-      | "getGoldConsumeByDonation"
+      | "getDonationVotesInformation"
+      | "getGoldConsumedByDonation"
       | "getGoldConsumedByVote"
       | "getGoldRewardFromDonationApproved"
       | "getMaxVotingTimes"
@@ -85,7 +85,7 @@ export interface DonationAndVotingSystemContractInterface
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "getDonationInfo",
+    functionFragment: "getDonationInformation",
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
@@ -97,11 +97,11 @@ export interface DonationAndVotingSystemContractInterface
     values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "getDonationVotesInfo",
+    functionFragment: "getDonationVotesInformation",
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "getGoldConsumeByDonation",
+    functionFragment: "getGoldConsumedByDonation",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -153,7 +153,7 @@ export interface DonationAndVotingSystemContractInterface
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getDonationInfo",
+    functionFragment: "getDonationInformation",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -165,11 +165,11 @@ export interface DonationAndVotingSystemContractInterface
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getDonationVotesInfo",
+    functionFragment: "getDonationVotesInformation",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getGoldConsumeByDonation",
+    functionFragment: "getGoldConsumedByDonation",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -255,7 +255,7 @@ export interface DonationAndVotingSystemContract extends BaseContract {
 
     getDonationIds(overrides?: CallOverrides): Promise<[BigNumber[]]>;
 
-    getDonationInfo(
+    getDonationInformation(
       id: PromiseOrValue<BigNumberish>,
       timeNow: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
@@ -272,13 +272,13 @@ export interface DonationAndVotingSystemContract extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[number]>;
 
-    getDonationVotesInfo(
+    getDonationVotesInformation(
       id: PromiseOrValue<BigNumberish>,
       timeNow: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<[BigNumber[], BigNumber[], string[]]>;
 
-    getGoldConsumeByDonation(overrides?: CallOverrides): Promise<[BigNumber]>;
+    getGoldConsumedByDonation(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     getGoldConsumedByVote(overrides?: CallOverrides): Promise<[BigNumber]>;
 
@@ -332,7 +332,7 @@ export interface DonationAndVotingSystemContract extends BaseContract {
 
   getDonationIds(overrides?: CallOverrides): Promise<BigNumber[]>;
 
-  getDonationInfo(
+  getDonationInformation(
     id: PromiseOrValue<BigNumberish>,
     timeNow: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
@@ -349,13 +349,13 @@ export interface DonationAndVotingSystemContract extends BaseContract {
     overrides?: CallOverrides
   ): Promise<number>;
 
-  getDonationVotesInfo(
+  getDonationVotesInformation(
     id: PromiseOrValue<BigNumberish>,
     timeNow: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
   ): Promise<[BigNumber[], BigNumber[], string[]]>;
 
-  getGoldConsumeByDonation(overrides?: CallOverrides): Promise<BigNumber>;
+  getGoldConsumedByDonation(overrides?: CallOverrides): Promise<BigNumber>;
 
   getGoldConsumedByVote(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -407,7 +407,7 @@ export interface DonationAndVotingSystemContract extends BaseContract {
 
     getDonationIds(overrides?: CallOverrides): Promise<BigNumber[]>;
 
-    getDonationInfo(
+    getDonationInformation(
       id: PromiseOrValue<BigNumberish>,
       timeNow: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
@@ -424,13 +424,13 @@ export interface DonationAndVotingSystemContract extends BaseContract {
       overrides?: CallOverrides
     ): Promise<number>;
 
-    getDonationVotesInfo(
+    getDonationVotesInformation(
       id: PromiseOrValue<BigNumberish>,
       timeNow: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<[BigNumber[], BigNumber[], string[]]>;
 
-    getGoldConsumeByDonation(overrides?: CallOverrides): Promise<BigNumber>;
+    getGoldConsumedByDonation(overrides?: CallOverrides): Promise<BigNumber>;
 
     getGoldConsumedByVote(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -487,7 +487,7 @@ export interface DonationAndVotingSystemContract extends BaseContract {
 
     getDonationIds(overrides?: CallOverrides): Promise<BigNumber>;
 
-    getDonationInfo(
+    getDonationInformation(
       id: PromiseOrValue<BigNumberish>,
       timeNow: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
@@ -504,13 +504,13 @@ export interface DonationAndVotingSystemContract extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    getDonationVotesInfo(
+    getDonationVotesInformation(
       id: PromiseOrValue<BigNumberish>,
       timeNow: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    getGoldConsumeByDonation(overrides?: CallOverrides): Promise<BigNumber>;
+    getGoldConsumedByDonation(overrides?: CallOverrides): Promise<BigNumber>;
 
     getGoldConsumedByVote(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -563,7 +563,7 @@ export interface DonationAndVotingSystemContract extends BaseContract {
 
     getDonationIds(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    getDonationInfo(
+    getDonationInformation(
       id: PromiseOrValue<BigNumberish>,
       timeNow: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
@@ -580,13 +580,13 @@ export interface DonationAndVotingSystemContract extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    getDonationVotesInfo(
+    getDonationVotesInformation(
       id: PromiseOrValue<BigNumberish>,
       timeNow: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    getGoldConsumeByDonation(
+    getGoldConsumedByDonation(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

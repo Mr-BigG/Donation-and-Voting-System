@@ -43,7 +43,7 @@ contract DonationAndVotingSystemContract {
     struct Donations {
         mapping(uint => Donation) getDonationWithId; // mapping映射
         uint[] donationIds; // 所有捐赠的id
-        uint goldConsumeByDonation; // 发起捐赠需要消耗的金币数量
+        uint goldConsumedByDonation; // 发起捐赠需要消耗的金币数量
         Counters.Counter donationIdCounter; // 捐赠id的计数器
     }
 
@@ -85,7 +85,7 @@ contract DonationAndVotingSystemContract {
 
     // 构造函数
     constructor(uint maxVotingTimes, uint goldConsumedByDonation, uint goldConsumedByVote, uint initIalUserGold) {
-        _donations.goldConsumeByDonation = goldConsumedByDonation; // 发起捐赠需要消耗的金币数量
+        _donations.goldConsumedByDonation = goldConsumedByDonation; // 发起捐赠需要消耗的金币数量
         _votes.maxVotingTimes = maxVotingTimes; //最大投票次数
         _votes.goldConsumedByVote = goldConsumedByVote; // 每个投票需要消耗的金币数量
         gold = new GoldContract("GoldCoin", "gold", initIalUserGold); //一键发金币
@@ -100,11 +100,11 @@ contract DonationAndVotingSystemContract {
         // 结束时间必须在未来 => \u7ed3\u675f\u65f6\u95f4\u5fc5\u987b\u5728\u672a\u6765
         require(endTime > block.timestamp, "\u7ed3\u675f\u65f6\u95f4\u5fc5\u987b\u5728\u672a\u6765");
         // 余额不足，无法提起新的捐赠 => \u4f59\u989d\u4e0d\u8db3\uff0c\u65e0\u6cd5\u63d0\u8d77\u65b0\u7684\u6350\u8d60
-        require(gold.balanceOf(msg.sender) >= _donations.goldConsumeByDonation, "\u4f59\u989d\u4e0d\u8db3\uff0c\u65e0\u6cd5\u63d0\u8d77\u65b0\u7684\u6350\u8d60");
+        require(gold.balanceOf(msg.sender) >= _donations.goldConsumedByDonation, "\u4f59\u989d\u4e0d\u8db3\uff0c\u65e0\u6cd5\u63d0\u8d77\u65b0\u7684\u6350\u8d60");
         // 系统对你的金币没有权限。请授权。 => \u7cfb\u7edf\u5bf9\u4f60\u7684\u91d1\u5e01\u6ca1\u6709\u6743\u9650\u3002\u8bf7\u6388\u6743\u3002
-        require(gold.allowance(msg.sender, address(this)) >= _donations.goldConsumeByDonation, "");
+        require(gold.allowance(msg.sender, address(this)) >= _donations.goldConsumedByDonation, "");
 
-        gold.transferFrom(msg.sender, address(this), _donations.goldConsumeByDonation); // 委托本合约把用户的金币转账给本合约（需要前端提前委托）
+        gold.transferFrom(msg.sender, address(this), _donations.goldConsumedByDonation); // 委托本合约把用户的金币转账给本合约（需要前端提前委托）
 
         uint newId = _donations.donationIdCounter.current(); // 获取新id
         Donation memory newDonation = Donation({
@@ -162,7 +162,7 @@ contract DonationAndVotingSystemContract {
     }
 
     // 捐赠的信息
-    function getDonationInfo(uint id, uint timeNow) public view returns (string memory, address, uint, uint, uint) {
+    function getDonationInformation(uint id, uint timeNow) public view returns (string memory, address, uint, uint, uint) {
         // 这个捐赠不存在 => \u8fd9\u4e2a\u6350\u8d60\u4e0d\u5b58\u5728
         require(_donations.getDonationWithId[id].isValid == true, "\u8fd9\u4e2a\u6350\u8d60\u4e0d\u5b58\u5728"); // 判断该捐赠是否存在
 
@@ -176,8 +176,8 @@ contract DonationAndVotingSystemContract {
     }
 
     // 发布捐赠需要消耗的金币数量
-    function getGoldConsumeByDonation() public view returns (uint) {
-        return _donations.goldConsumeByDonation;
+    function getGoldConsumedByDonation() public view returns (uint) {
+        return _donations.goldConsumedByDonation;
     }
 
     // 捐赠的状态
@@ -307,7 +307,7 @@ contract DonationAndVotingSystemContract {
         }
 
         // 给捐赠发起人发放奖励（捐赠发起人所缴纳的金币gold + 该捐赠投票(赞成+反对)所得的所有金币gold）
-        gold.transfer(_donations.getDonationWithId[id].creator, (numOfApproval + numOfReject) * _votes.goldConsumedByVote + _donations.goldConsumeByDonation);
+        gold.transfer(_donations.getDonationWithId[id].creator, (numOfApproval + numOfReject) * _votes.goldConsumedByVote + _donations.goldConsumedByDonation);
     }
 
     // 用户是否可以领取纪念品奖励
@@ -403,6 +403,9 @@ contract DonationAndVotingSystemContract {
                 break;
             }
         }
+        if (!isSenderInUserAddresses) {
+            _votes.userAddresses.push(msg.sender); // 添加一个新地址
+        }
     }
 
     // 用户投票信息
@@ -440,11 +443,11 @@ contract DonationAndVotingSystemContract {
     }
 
     // 指定id的捐赠的投票信息
-    function getDonationVotesInfo(uint id, uint timeNow) public view returns (uint[] memory, uint[] memory, address[] memory) {
+    function getDonationVotesInformation(uint id, uint timeNow) public view returns (uint[] memory, uint[] memory, address[] memory) {
         uint i;
         uint count = 0;
         for (i = 0; i < _votes.userAddresses.length; i++) {
-            Vote[] memory userVotes = _votes.getVoteWithAddressAndId[msg.sender][_donations.donationIds[i]];
+            Vote[] memory userVotes = _votes.getVoteWithAddressAndId[_votes.userAddresses[i]][id];
             if (userVotes.length > 0) {
                 count++;
             }

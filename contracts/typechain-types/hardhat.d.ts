@@ -13,10 +13,6 @@ import * as Contracts from ".";
 declare module "hardhat/types/runtime" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
     getContractFactory(
-      name: "IERC4906",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC4906__factory>;
-    getContractFactory(
       name: "ERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC20__factory>;
@@ -65,19 +61,26 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.DonationAndVotingSystemContract__factory>;
     getContractFactory(
+      name: "DSOMW",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.DSOMW__factory>;
+    getContractFactory(
       name: "GoldContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.GoldContract__factory>;
+    getContractFactory(
+      name: "MyERC20",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.MyERC20__factory>;
+    getContractFactory(
+      name: "MyERC721",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.MyERC721__factory>;
     getContractFactory(
       name: "StringHelper",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.StringHelper__factory>;
 
-    getContractAt(
-      name: "IERC4906",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC4906>;
     getContractAt(
       name: "ERC20",
       address: string,
@@ -139,10 +142,25 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.DonationAndVotingSystemContract>;
     getContractAt(
+      name: "DSOMW",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.DSOMW>;
+    getContractAt(
       name: "GoldContract",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.GoldContract>;
+    getContractAt(
+      name: "MyERC20",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.MyERC20>;
+    getContractAt(
+      name: "MyERC721",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.MyERC721>;
     getContractAt(
       name: "StringHelper",
       address: string,

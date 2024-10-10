@@ -11,9 +11,6 @@
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "antd": "^4.23.6",
-    "element-react": "^1.4.34",
-    "element-theme-default": "^1.4.13",
-    "ethers": "^6.13.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
@@ -43,9 +40,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "@craco/craco": "^7.1.0",
-    "source-map-loader": "^5.0.0"
   }
 }

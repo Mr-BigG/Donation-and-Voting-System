@@ -34,6 +34,7 @@ export interface GoldContractInterface extends utils.Interface {
     "balanceOf(address)": FunctionFragment;
     "decimals()": FunctionFragment;
     "decreaseAllowance(address,uint256)": FunctionFragment;
+    "getGold()": FunctionFragment;
     "getInitialUserGold()": FunctionFragment;
     "getWhetherUserCanGetInitialUserGold()": FunctionFragment;
     "increaseAllowance(address,uint256)": FunctionFragment;
@@ -51,6 +52,7 @@ export interface GoldContractInterface extends utils.Interface {
       | "balanceOf"
       | "decimals"
       | "decreaseAllowance"
+      | "getGold"
       | "getInitialUserGold"
       | "getWhetherUserCanGetInitialUserGold"
       | "increaseAllowance"
@@ -78,6 +80,7 @@ export interface GoldContractInterface extends utils.Interface {
     functionFragment: "decreaseAllowance",
     values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
   ): string;
+  encodeFunctionData(functionFragment: "getGold", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "getInitialUserGold",
     values?: undefined
@@ -117,6 +120,7 @@ export interface GoldContractInterface extends utils.Interface {
     functionFragment: "decreaseAllowance",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "getGold", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getInitialUserGold",
     data: BytesLike
@@ -226,6 +230,10 @@ export interface GoldContract extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    getGold(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     getInitialUserGold(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     getWhetherUserCanGetInitialUserGold(
@@ -280,6 +288,10 @@ export interface GoldContract extends BaseContract {
   decreaseAllowance(
     spender: PromiseOrValue<string>,
     subtractedValue: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  getGold(
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -339,6 +351,8 @@ export interface GoldContract extends BaseContract {
       subtractedValue: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<boolean>;
+
+    getGold(overrides?: CallOverrides): Promise<void>;
 
     getInitialUserGold(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -422,6 +436,10 @@ export interface GoldContract extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    getGold(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     getInitialUserGold(overrides?: CallOverrides): Promise<BigNumber>;
 
     getWhetherUserCanGetInitialUserGold(
@@ -477,6 +495,10 @@ export interface GoldContract extends BaseContract {
     decreaseAllowance(
       spender: PromiseOrValue<string>,
       subtractedValue: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    getGold(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 

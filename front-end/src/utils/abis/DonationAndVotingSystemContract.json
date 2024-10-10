@@ -97,7 +97,7 @@
           "type": "uint256"
         }
       ],
-      "name": "getDonationInfo",
+      "name": "getDonationInformation",
       "outputs": [
         {
           "internalType": "string",
@@ -184,7 +184,7 @@
           "type": "uint256"
         }
       ],
-      "name": "getDonationVotesInfo",
+      "name": "getDonationVotesInformation",
       "outputs": [
         {
           "internalType": "uint256[]",
@@ -207,7 +207,7 @@
     },
     {
       "inputs": [],
-      "name": "getGoldConsumeByDonation",
+      "name": "getGoldConsumedByDonation",
       "outputs": [
         {
           "internalType": "uint256",

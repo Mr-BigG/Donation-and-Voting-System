@@ -62,8 +62,7 @@ const DonationAndVotingSystemContractPage = () => {
     }
     useEffect(() => {
         initCheckAccounts()
-    }, []);
-
+    }, [])
     // 手动连接钱包
     const onClickConnectWallet = async () => {
         // 查看window对象里是否存在ethereum（MetaMask安装后注入的）对象
@@ -180,12 +179,11 @@ const DonationAndVotingSystemContractPage = () => {
             setErrorMessage('合约不存在！')
         }
     }
-
     useEffect(() => {
         if (account !== '') {
             getUserAddresses()
         }
-    }, [account]);
+    }, [account])
 
     // 自动获取所有捐赠的信息
     const getDonationInfo = async () => {
@@ -219,7 +217,7 @@ const DonationAndVotingSystemContractPage = () => {
                         revertOutput(error)
                     }
                 }))
-                console.log(_donationInfo)
+                console.log("_donationInfo: ", _donationInfo)
                 setDonationsInfo(_donationInfo.reverse())
             } catch (error: any) {
                 revertOutput(error)
@@ -228,18 +226,17 @@ const DonationAndVotingSystemContractPage = () => {
             setErrorMessage('合约不存在！')
         }
     }
-
     useEffect(() => {
         if (account !== '') {
             getDonationInfo()
         }
-    }, [account]);
+    }, [account])
 
     // 自动获取发布捐赠需要消耗的金币数量Gold
     const getGoldConsumedByDonation = async () => {
         if (DonationAndVotingSystemContract_Contract) {
             try {
-                const _goldConsumedByDonation = await DonationAndVotingSystemContract_Contract.methods.getGoldConsumeByDonation().call({from: account})
+                const _goldConsumedByDonation = await DonationAndVotingSystemContract_Contract.methods.getGoldConsumedByDonation().call({from: account})
                 setGoldConsumedByDonation(_goldConsumedByDonation)
             } catch (error: any) {
                 revertOutput(error)
@@ -248,12 +245,11 @@ const DonationAndVotingSystemContractPage = () => {
             setErrorMessage('合约不存在！')
         }
     }
-
     useEffect(() => {
         if (account !== '') {
             getGoldConsumedByDonation()
         }
-    }, [account]);
+    }, [account])
 
     // 自动获取投票所需要的金币数量Gold
     const getGoldConsumedByVote = async () => {
@@ -268,12 +264,11 @@ const DonationAndVotingSystemContractPage = () => {
             setErrorMessage('合约不存在！')
         }
     }
-
     useEffect(() => {
         if (account !== '') {
             getGoldConsumedByVote()
         }
-    }, [account]);
+    }, [account])
 
     // 自动获取最大投票次数
     const getMaxVotingTimes = async () => {
@@ -288,12 +283,11 @@ const DonationAndVotingSystemContractPage = () => {
             setErrorMessage('合约不存在！')
         }
     }
-
     useEffect(() => {
         if (account !== '') {
             getMaxVotingTimes()
         }
-    }, [account]);
+    }, [account])
 
     // 自动获取金币Gold的数量
     const getInitialUserGold = async () => {
@@ -308,12 +302,11 @@ const DonationAndVotingSystemContractPage = () => {
             setErrorMessage('合约不存在！')
         }
     }
-
     useEffect(() => {
         if (account !== '') {
             getInitialUserGold()
         }
-    }, [account]);
+    }, [account])
 
     // 手动领取金币Gold
     const getGold = async () => {
@@ -478,7 +471,6 @@ const DonationAndVotingSystemContractPage = () => {
         URI: string;
         awardTime: string
     }[])
-
     useEffect(() => {
         if (account !== '' && donationsInfo) {
             try {
@@ -513,8 +505,7 @@ const DonationAndVotingSystemContractPage = () => {
                 revertOutput(error)
             }
         }
-    }, [donationsInfo]);
-
+    }, [donationsInfo])
     useEffect(() => {
         if (account !== "" && donationsInfo && userInfo.donationIds) {
             try {
@@ -552,8 +543,7 @@ const DonationAndVotingSystemContractPage = () => {
                 revertOutput(error)
             }
         }
-    }, [donationsInfo, userInfo.donationIds]);
-
+    }, [donationsInfo, userInfo.donationIds])
     useEffect(() => {
         if (account !== "" && donationsInfo && userInfo.donationIds) {
             try {
@@ -606,8 +596,7 @@ const DonationAndVotingSystemContractPage = () => {
                 revertOutput(error)
             }
         }
-    }, [donationsInfo, userInfo.donationIds]);
-
+    }, [donationsInfo, userInfo.donationIds])
     useEffect(() => {
         if (account !== "" && userInfo.votesInfo && donationsInfo) {
             try {
@@ -623,8 +612,7 @@ const DonationAndVotingSystemContractPage = () => {
                 revertOutput(error)
             }
         }
-    }, [userInfo.votesInfo, donationsInfo]);
-
+    }, [userInfo.votesInfo, donationsInfo])
     useEffect(() => {
         if (account !== "" && userInfo.awardInfo) {
             try {
@@ -639,7 +627,7 @@ const DonationAndVotingSystemContractPage = () => {
                 revertOutput(error)
             }
         }
-    }, [userInfo.awardInfo]);
+    }, [userInfo.awardInfo])
 
     const columnsDonation: ColumnsType<{
         id: number;
@@ -964,17 +952,20 @@ const DonationAndVotingSystemContractPage = () => {
 
     // 捐赠中心的HTML
     const DonationCenter = () => {
+        console.log("donationInfo: ", donationsInfo)
         return (
             <Layout className="site-layout" style={{ marginLeft: 200, minHeight: 900}}>
-                {(errorMessage !== "" && open === false) && <Alert type="error" message={errorMessage} banner closable afterClose={()=>setErrorMessage("")}></Alert>}
-                {(successMessage !== "" && open === false) && <Alert type="success" message={successMessage} banner closable afterClose={()=>setSuccessMessage("")}></Alert>}
+                {(errorMessage !== "" && open === false) && <Alert type="error" message={errorMessage} banner closable afterClose={()=>setErrorMessage("")} />}
+                {(successMessage !== "" && open === false) && <Alert type="success" message={successMessage} banner closable afterClose={()=>setSuccessMessage("")} />}
                 <Header className="header">
-                    <br/>
+                    <br />
                     <Row justify="space-around" align="middle">
-                        <Col span={6}><FileTextOutlined /><br />捐赠总数{donationsInfo.length}项</Col>
-                        <Col span={6}><FileDoneOutlined /> <br/>捐赠通过率{donationsInfo.length === 0 ? 0 : (donationsInfo.filter((item)=> item.status === 2).length + donationsInfo.filter((item)=> item.status === 1).length) === 0 ? 0 : (donationsInfo.filter((item)=> item.status === 2).length / (donationsInfo.filter((item)=> item.status === 2).length + donationsInfo.filter((item)=> item.status === 1).length) * 100).toFixed(2)}%</Col>
-                        <Col span={6}><TeamOutlined /><br />参与总人数{userAddresses.length}人</Col>
-                        <Col span={6}><HighlightOutlined /> <br/>有效投票总次数{donationsInfo.length === 0 ? 0 : ((donationsInfo.map((item) => item.votesInfo.length)).map((item, index, array)=> index !== 0 ? array[0] += item:array[0] += 0)).reverse()[0]}次</Col>
+
+                        <Col span={6}><FileTextOutlined /> <br/>提案总数{donationsInfo.length}项</Col>
+                        <Col span={6}><FileDoneOutlined /> <br/>提案通过率{donationsInfo.length==0?0:(donationsInfo.filter((item)=>item.status===2).length+donationsInfo.filter((item)=>item.status===1).length)==0?0:(donationsInfo.filter((item)=>item.status===2).length / (donationsInfo.filter((item)=>item.status===2).length+donationsInfo.filter((item)=>item.status===1).length) * 100).toFixed(2)}%</Col>
+                        <Col span={6}><TeamOutlined /> <br/>参与总人数{userAddresses.length}人</Col>
+                        <Col span={6}><HighlightOutlined /> <br/>有效投票总次数{donationsInfo.length==0?0:((donationsInfo.map((item)=>item.votesInfo.length)).map((item,index,array)=>index!=0?array[0]+=item:array[0]+=0)).reverse()[0]}次</Col>
+
                     </Row>
                 </Header>
                 <Content style={{ margin: '16px', marginTop: '0px', padding: '16px', backgroundColor: 'white', overflow: 'initial'}}>
@@ -1008,11 +999,11 @@ const DonationAndVotingSystemContractPage = () => {
                             />
                         </div>
                         <div style={{ margin: '8px' }}>
-                            <TextArea showCount maxLength={200} onChange={(event) => _donationContent = event.target.value}></TextArea>
+                            <TextArea showCount maxLength={200} onChange={(event) => _donationContent = event.target.value} />
                         </div>
                     </Modal>
-                    <Divider></Divider>
-                    <AllDonationTable></AllDonationTable>
+                    <Divider />
+                    <AllDonationTable />
                 </Content>
                 <Footer style={{ textAlign: 'center' }}>Ant Design ©2024 Created by Ant UED</Footer>
             </Layout>
@@ -1088,23 +1079,23 @@ const DonationAndVotingSystemContractPage = () => {
                         centered
                         items={[
                             {label: (<span><FileTextOutlined />我的捐赠</span>), key: '1', children: <UserDonationTable />},
-                            {label: (<span><FileTextOutlined />我的投票</span>), key: '2', children: <UserVoteTable />},
-                            {label: (<span><FileTextOutlined />我的纪念品</span>), key: '3', children: <UserAwardTable />}
+                            {label: (<span><HighlightOutlined />我的投票</span>), key: '2', children: <UserVoteTable />},
+                            {label: (<span><GiftOutlined />我的纪念品</span>), key: '3', children: <UserAwardTable />}
                         ]}
                     />
                     <Modal
                         transitionName=""
                         maskTransitionName=""
                         open={open_}
-                        title={"捐赠" + voteInfoId + "得到投票详情"}
+                        title={"捐赠" + voteInfoId + "的投票详情"}
                         onCancel={handleCancel_}
                         width={800}
                         footer={[
                             <Button key="ok" type="primary" onClick={handleCancel_}>确定</Button>
                         ]}
                     >
-                        {(errorMessage !== "" && open === true) && <Alert type="error" message={errorMessage} banner closable afterClose={() => setErrorMessage("")}></Alert>}
-                        {(successMessage !== "" && open === true) && <Alert type="success" message={successMessage} banner closable afterClose={() => setSuccessMessage("")}></Alert>}
+                        {(errorMessage !== "" && open === true) && <Alert type="error" message={errorMessage} banner closable afterClose={() => setErrorMessage("")} />}
+                        {(successMessage !== "" && open === true) && <Alert type="success" message={successMessage} banner closable afterClose={() => setSuccessMessage("")} />}
                         <UserDonationVoteTable id={voteInfoId} />
                     </Modal>
 
@@ -1129,9 +1120,11 @@ const DonationAndVotingSystemContractPage = () => {
                 theme="light"
             >
                 <div className="logo"><SmileFilled />Donation & Voting</div>
-                <Menu theme="light" mode="inline" defaultSelectedKeys={['0']} items={items} onSelect={(item: any) => {console.log("导航栏的key：" + item.key); setMenuKey(item.key)}}></Menu>
+                <Menu theme="light" mode="inline" defaultSelectedKeys={['0']} items={items} onSelect={(item:any)=>{setMenuKey(item.key)}}/>
             </Sider>
-            {menuKey === 0 ? <DonationCenter /> : (menuKey === 1 ? <UserCenter /> : menuKey)}
+            {/* 注意下面的导航栏切换部分，需要使用两个=来判断menuKey的值，而不是三个 */}
+            {/*{menuKey === 0 ? <DonationCenter /> : (menuKey === 1 ? <UserCenter /> : menuKey)}*/}
+            {menuKey == 0 ? <DonationCenter /> : (menuKey == 1 ? <UserCenter /> : menuKey)}
         </Layout>
     )
 

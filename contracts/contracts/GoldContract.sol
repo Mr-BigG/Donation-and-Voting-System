@@ -18,6 +18,15 @@ contract GoldContract is ERC20 {
         return _initialUserGold;
     }
 
+    // 每个用户仅有一次领取金币Gold的机会
+    function getGold() public {
+        // 检查消息发起者是否已经领取过金币Gold
+        require(claimedGetGoldUserList[msg.sender] == false, "You have got GOLD already");
+        claimedGetGoldUserList[msg.sender] = true;
+        // 领取
+        _mint(msg.sender, _initialUserGold);
+    }
+
     // 每个用户是否可以领取初始金币
     function getWhetherUserCanGetInitialUserGold() public view returns (bool) {
         // 如果已领取（用户address对应的bool值为true），则返回false（即不能重复领取）
