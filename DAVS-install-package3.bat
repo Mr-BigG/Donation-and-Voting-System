@@ -1,0 +1,2 @@
+cd contracts
+npm install
