@@ -36,6 +36,7 @@
 * 限制每位用户对每个donation的rejected vote数量为1次 ★★★★ CJY
 * 设置一个合适的函数，使得用户对每个donation的每次approval vote的价格逐次递增 ★★★★★ LJY
 * 添加gold => ETH的功能 ★★★★★ LJY / GSJ
+  如何将捐献的ETH转换为gold，有gas的损耗（不确定的数量）
 * 平台的抽成（后续如果部署在以太坊主网，可以用来盈利） ★★ GSJ
 * 更改前端各个组件的样式、布局、颜色等 ★★★ GSJ
 
