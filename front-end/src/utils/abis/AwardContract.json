@@ -342,7 +342,7 @@
           "type": "string"
         }
       ],
-      "name": "getWhetherUserCanGetAward",
+      "name": "getWhetherUserCanGetAwardReward",
       "outputs": [
         {
           "internalType": "bool",

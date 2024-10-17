@@ -328,8 +328,8 @@ contract DonationAndVotingSystemContract {
             uint numOfAward = numOfDonationsApproved / 3;
             uint i;
             for (i = 1; i <= numOfAward; i++) {
-                // 成就：已批准 %u 个捐赠 => \u7531\u4e8e\u4e00\u4e9b\u539f\u56e0\uff0c\u4f60\u65e0\u6cd5\u83b7\u5f97\u91d1\u5e01\u5956\u52b1
-                if (awards.getWhetherUserCanGetAward(msg.sender, StringHelper.sprintf("\u7531\u4e8e\u4e00\u4e9b\u539f\u56e0\uff0c\u4f60\u65e0\u6cd5\u83b7\u5f97\u91d1\u5e01\u5956\u52b1", i * 3))) {
+                // 成就：已批准 %u 个捐赠 => \u6210\u5c31\uff1a\u5df2\u6279\u51c6 %u \u4e2a\u6350\u8d60
+                if (awards.getWhetherUserCanGetAwardReward(msg.sender, StringHelper.sprintf("\u6210\u5c31\uff1a\u5df2\u6279\u51c6 %u \u4e2a\u6350\u8d60", i * 3))) {
                     return true;
                 } else {
                     continue;
@@ -361,10 +361,10 @@ contract DonationAndVotingSystemContract {
             // 每3个捐赠发放一次纪念品
             uint numOfAward = numOfDonationApproved / 3;
             uint j;
-            for (j = 0; j <= numOfAward; j++) {
+            for (j = 1; j <= numOfAward; j++) {
                 // 是否已经领取过某种纪念品
                 // 成就：已批准 %u 个捐赠 => \u6210\u5c31\uff1a\u5df2\u6279\u51c6 %u \u4e2a\u6350\u8d60
-                if (awards.getWhetherUserCanGetAward(msg.sender, StringHelper.sprintf("\u6210\u5c31\uff1a\u5df2\u6279\u51c6 %u \u4e2a\u6350\u8d60", j * 3))) {
+                if (awards.getWhetherUserCanGetAwardReward(msg.sender, StringHelper.sprintf("\u6210\u5c31\uff1a\u5df2\u6279\u51c6 %u \u4e2a\u6350\u8d60", j * 3))) {
                     awards.awardItem(msg.sender, StringHelper.sprintf("\u6210\u5c31\uff1a\u5df2\u6279\u51c6 %u \u4e2a\u6350\u8d60", j * 3));
                 } else {
                     continue;

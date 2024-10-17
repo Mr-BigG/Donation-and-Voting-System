@@ -336,12 +336,29 @@ const DonationAndVotingSystemContractPage = () => {
         }
         if (DonationAndVotingSystemContract_Contract && AwardContract_Contract) {
             try {
-                await DonationAndVotingSystemContract_Contract.methods.getAwardReward().send({from: account})
-                getUserInfo()
+                // setAwardButtonDisabled(true);  // 禁用按钮，防止重复点击
+                try {
+                    await DonationAndVotingSystemContract_Contract.methods.getAwardReward().send({from: account})
+                } catch (error: any) {
+                    revertOutput("1")
+                    setErrorMessage('1')
+                    console.log("1")
+                }
+                try {
+                    // await new Promise(resolve => setTimeout(resolve, 500)); // 加入短暂延迟，确保链上状态更新
+                    getUserInfo()
+                } catch (error: any) {
+                    revertOutput("2")
+                    setErrorMessage('2')
+                    console.log("2")
+                }
+
                 getDonationInfo()
                 setSuccessMessage('恭喜！你获得了纪念品！')
             } catch (error: any) {
                 revertOutput(error)
+            } finally {
+                // setAwardButtonDisabled(false);  // 重新启用按钮
             }
         } else {
             setErrorMessage('合约不存在！')
@@ -479,7 +496,7 @@ const DonationAndVotingSystemContractPage = () => {
                     if (item.status === 0) {
                         button_action =
                             <div>
-                                <Popconfirm title={"投票将消耗" + goldConsumedByVote + " Gold。你目前拥有" + userInfo.balance + " Gold。确定继续吗？"} onConfirm={() => voteOnDonation(1, item.id)} okText="确定" cancelText="取消" placement="leftTop">
+                                <Popconfirm title={"投票将消耗" + goldConsumedByVote + " Gold。你目前拥有" + userInfo.balance + " Gold。确定继续吗？！"} onConfirm={() => voteOnDonation(1, item.id)} okText="确定" cancelText="取消" placement="leftTop">
                                     <Button icon={<CheckSquareOutlined />}>赞成</Button>
                                 </Popconfirm>
                                 <Popconfirm title={"投票将消耗" + goldConsumedByVote + " Gold。你目前拥有" + userInfo.balance + " Gold。确定继续吗？"} onConfirm={() => voteOnDonation(0, item.id)} okText="确定" cancelText="取消" placement="leftTop">
@@ -602,11 +619,6 @@ const DonationAndVotingSystemContractPage = () => {
             try {
                 setUserVoteData(userInfo.votesInfo.map((item) => {
                     console.log("item: ", item)
-                    if (!item.donationIdVotedOn) {
-                        console.warn("donationIdVotedOn is undefined for item: ", item);
-                    } else {
-                        console.log("item.donationIdVotedOn: ", item.donationIdVotedOn);
-                    }
                     return {
                         behavior: (item.behavior == 1 ? "赞成" : "反对"),
                         voteTime: getDate(item.voteTime),
@@ -969,8 +981,8 @@ const DonationAndVotingSystemContractPage = () => {
                     <br />
                     <Row justify="space-around" align="middle">
 
-                        <Col span={6}><FileTextOutlined /> <br/>提案总数{donationsInfo.length}项</Col>
-                        <Col span={6}><FileDoneOutlined /> <br/>提案通过率{donationsInfo.length==0?0:(donationsInfo.filter((item)=>item.status===2).length+donationsInfo.filter((item)=>item.status===1).length)==0?0:(donationsInfo.filter((item)=>item.status===2).length / (donationsInfo.filter((item)=>item.status===2).length+donationsInfo.filter((item)=>item.status===1).length) * 100).toFixed(2)}%</Col>
+                        <Col span={6}><FileTextOutlined /> <br/>捐赠总数{donationsInfo.length}项</Col>
+                        <Col span={6}><FileDoneOutlined /> <br/>捐赠通过率{donationsInfo.length==0?0:(donationsInfo.filter((item)=>item.status===2).length+donationsInfo.filter((item)=>item.status===1).length)==0?0:(donationsInfo.filter((item)=>item.status===2).length / (donationsInfo.filter((item)=>item.status===2).length+donationsInfo.filter((item)=>item.status===1).length) * 100).toFixed(2)}%</Col>
                         <Col span={6}><TeamOutlined /> <br/>参与总人数{userAddresses.length}人</Col>
                         <Col span={6}><HighlightOutlined /> <br/>有效投票总次数{donationsInfo.length==0?0:((donationsInfo.map((item)=>item.votesInfo.length)).map((item,index,array)=>index!=0?array[0]+=item:array[0]+=0)).reverse()[0]}次</Col>
 
@@ -1050,6 +1062,7 @@ const DonationAndVotingSystemContractPage = () => {
     // 用户中心的HTML
     const UserCenter = () => {
         console.log("userInfo: ", userInfo)
+        console.log("userInfo.getAwardReward: ", userInfo.getAwardReward)
         // console.log("userInfo.votesInfo: ", userInfo.votesInfo)
         return (
             <Layout className="site-layout" style={{ marginLeft: 200, minHeight: 900 }}>
@@ -1078,7 +1091,7 @@ const DonationAndVotingSystemContractPage = () => {
                         </Row>
                         <Row justify="space-around" align="middle">
                             <Col span={20}>
-                                {account === "" ? <Button type="primary" size="large" shape="round" icon={<WalletOutlined />} onClick={onClickConnectWallet} >连接钱包</Button> : (userInfo.getInitialGold === true ? <Button type="primary" size="large" shape="round" icon={<DollarCircleOutlined />} onClick={getGold}>领取初始金币Gold</Button> : (userInfo.getAwardReward === true && <Button type="primary" size="large" shape="round" icon={<GiftOutlined />} onClick={getAwardReward}>领取纪念品奖励</Button>))}
+                                {account === "" ? <Button type="primary" size="large" shape="round" icon={<WalletOutlined />} onClick={onClickConnectWallet} >连接钱包</Button> : (userInfo.getInitialGold == true ? <Button type="primary" size="large" shape="round" icon={<DollarCircleOutlined />} onClick={getGold}>领取初始金币Gold</Button> : (userInfo.getAwardReward == true && <Button type="primary" size="large" shape="round" icon={<GiftOutlined />} onClick={getAwardReward}>领取纪念品奖励</Button>))}
                             </Col>
                         </Row>
                     </div>

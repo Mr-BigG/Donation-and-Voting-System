@@ -18,7 +18,7 @@
 ## 2024.10.01 17:00 Guo Shaojie 更新说明：根据demo项目重构了智能合约.sol文件，前端重构完成度约为70%
 ## 2024.10.03 18:25 Guo Shaojie 更新说明：前端重构完成度约为95%， 已知BUG为：启动react后，左侧导航栏切换时页面会变白
 ## 2024.10.10 18:50 Guo Shaojie 更新说明：之前的BUG已修复，已知新的BUG如下：
-* 点击“发起捐赠”按钮，输入捐赠内容和起止时间，点击“提交捐赠”按钮后，浏览器控制台会报错，据推断存在问题的代码段为DonationAndVotingSystemContract.tsx文件中的约965行，即 
+* 点击“发起捐赠”按钮，输入捐赠内容和起止时间，点击“提交捐赠”按钮后，浏览器控制台会报错，据推断存在问题的代码段为DonationAndVotingSystemContract.tsx文件中的约965行，即
 ``` typescript jsx
 <Col span={6}><FileDoneOutlined /> <br/>提案通过率{donationsInfo.length==0?0:(donationsInfo.filter((item)=>item.status===2).length+donationsInfo.filter((item)=>item.status===1).length)==0?0:(donationsInfo.filter((item)=>item.status===2).length / (donationsInfo.filter((item)=>item.status===2).length+donationsInfo.filter((item)=>item.status===1).length) * 100).toFixed(2)}%</Col>
 ```
@@ -30,13 +30,18 @@
   * 如果用户选择囤积奖励，比如通过3个donation后没有立刻领取纪念品奖励，而是选择继续通过donation并累计达到6次后，此时用户首次点击“领取纪念品奖励”按钮后会报JSON错误，且没有任何奖励发送到用户的账户；当用户第二次点击该按钮后，奖励会发送到用户账户，但此时奖励变为了3个而不是2个（正常情况下每3个approval的donation会得到一个纪念品，6个approval的donation应该是2个纪念品），且按钮“领取纪念品奖励”没有隐藏，如果用户继续点击它，系统虽然会提示领取成功，但实际没有任何纪念品到账
 
 该BUG不影响系统的主要功能，如果开发时间紧张，可以在Pre的时候刻意忽略它。
+## 2024.10.17 17:00 Guo Shaojie 更新说明：上述的次要BUG已修复大半，如果每3个通过的donation就立即领取纪念品，则不会有BUG出现；若囤积，则第一次点击“领取纪念品奖励”会报JSON错误，再次点击则可以正常领取纪念品奖励。Pre时尽量避免囤积
+## 2024.10.17 17:05 Guo Shaojie 更新说明：发现若干新的BUG，如下：
+* 投票相关BUG1：用户A创建一个donation，A给自己的donation投票，如果投票次数（approve）大于一次，则只显示一次不显示实际次数，但扣除的gold仍为实际次数
+  * 该donation通过后，用户A得到的gold应该是创建donation的费用+实际投票次数的费用，例如创建donation花费1000gold，投了3票approve花费100x3=300gold，则用户A应该得到1000+300=1300gold，但用户A实际得到的gold为1000+100=1100gold，额外的200gold暂不清楚去了哪里。（个人认为原系统的赞同数/反对数是按照人数计算而不是票数计算）
+* 投票相关BUG2：与BUG1类似，用户A创建一个donation，但是A不给自己投票，而是由用户B进行投票且投3次approve，用户A得到的实际gold仍为1000+100=1100gold而不是1000+300=1300gold（个人认为原因类似）
+* 若系统的donation数据量越多，每次投票、创建操作后或刷新操作后加载时间会变长，性能显著下降
 
 
 ## 待完成功能
 * 限制每位用户对每个donation的rejected vote数量为1次 ★★★★ CJY
 * 设置一个合适的函数，使得用户对每个donation的每次approval vote的价格逐次递增 ★★★★★ LJY
 * 添加gold => ETH的功能 ★★★★★ LJY / GSJ
-  如何将捐献的ETH转换为gold，有gas的损耗（不确定的数量）
 * 平台的抽成（后续如果部署在以太坊主网，可以用来盈利） ★★ GSJ
 * 更改前端各个组件的样式、布局、颜色等 ★★★ GSJ
 

@@ -25,7 +25,7 @@ contract AwardContract is ERC721URIStorage {
     }
 
     Awards private _awards;
-    mapping(string => mapping(address => bool)) claimedGetAwardsUserList; // 已经获得指定2TokenURI奖励的用户名单
+    mapping(string => mapping(address => bool)) claimedGetAwardsUserList; // 已经获得指定TokenURI奖励的用户名单
 
     // 初始化
     constructor(string memory name, string memory symbol) ERC721(name, symbol) {
@@ -38,7 +38,7 @@ contract AwardContract is ERC721URIStorage {
         // 只有系统可以访问此函数(awardTime) => \u53ea\u6709\u7cfb\u7edf\u53ef\u4ee5\u8bbf\u95ee\u6b64\u51fd\u6570(awardTime)
         require(msg.sender == manager, "\u53ea\u6709\u7cfb\u7edf\u53ef\u4ee5\u8bbf\u95ee\u6b64\u51fd\u6570(awardTime)");
         // 您已获得此奖励 => \u60a8\u5df2\u83b7\u5f97\u6b64\u5956\u52b1
-        require(claimedGetAwardsUserList[tokenURI][msg.sender] == false, "");
+        require(claimedGetAwardsUserList[tokenURI][msg.sender] == false, "\u60a8\u5df2\u83b7\u5f97\u6b64\u5956\u52b1");
 
         // 将该用户设定为已获取纪念品(奖励)
         claimedGetAwardsUserList[tokenURI][user] = true;
@@ -80,7 +80,7 @@ contract AwardContract is ERC721URIStorage {
     }
 
     // 用户是否可以获取某种Token_URI的award
-    function getWhetherUserCanGetAward(address user, string memory tokenURI) public view returns (bool) {
+    function getWhetherUserCanGetAwardReward(address user, string memory tokenURI) public view returns (bool) {
         return !claimedGetAwardsUserList[tokenURI][user];
     }
 }
