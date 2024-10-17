@@ -33,11 +33,11 @@
 
 
 ## 待完成功能
-* 限制每位用户对每个donation的rejected vote数量为1次 ★★★★
-* 设置一个合适的函数，使得用户对每个donation的每次approval vote的价格逐次递增 ★★★★★
-* 添加gold => ETH的功能 ★★★★★
-* 平台的抽成（后续如果部署在以太坊主网，可以用来盈利） ★★
-* 更改前端各个组件的样式、布局、颜色等 ★★★
+* 限制每位用户对每个donation的rejected vote数量为1次 ★★★★ JCY
+* 设置一个合适的函数，使得用户对每个donation的每次approval vote的价格逐次递增 ★★★★★ LJY
+* 添加gold => ETH的功能 ★★★★★ LJY / GSJ
+* 平台的抽成（后续如果部署在以太坊主网，可以用来盈利） ★★ GSJ
+* 更改前端各个组件的样式、布局、颜色等 ★★★ GSJ
 
 ## 提示
 * 建议使用Remix编写后端，使用IntellIJ编写前端，因为IntellIJ比VS Code方便太多了
