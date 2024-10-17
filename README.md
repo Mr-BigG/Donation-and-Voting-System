@@ -33,7 +33,7 @@
 
 
 ## 待完成功能
-* 限制每位用户对每个donation的rejected vote数量为1次 ★★★★ JCY
+* 限制每位用户对每个donation的rejected vote数量为1次 ★★★★ CJY
 * 设置一个合适的函数，使得用户对每个donation的每次approval vote的价格逐次递增 ★★★★★ LJY
 * 添加gold => ETH的功能 ★★★★★ LJY / GSJ
 * 平台的抽成（后续如果部署在以太坊主网，可以用来盈利） ★★ GSJ
