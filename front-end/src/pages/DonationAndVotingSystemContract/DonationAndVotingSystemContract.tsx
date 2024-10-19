@@ -24,9 +24,28 @@ import {
 import type { RangePickerProps } from "antd/es/date-picker";
 import type { MenuProps } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { Layout, Menu, Row, Col, Button, Table, Empty, Tag, Tabs, Divider, Alert, Modal, Input, DatePicker,Popconfirm} from 'antd';
+import {
+    Layout,
+    Menu,
+    Row,
+    Col,
+    Button,
+    Table,
+    Empty,
+    Tag,
+    Tabs,
+    Divider,
+    Alert,
+    Modal,
+    Input,
+    DatePicker,
+    Popconfirm,
+    Dropdown,
+    Space
+} from 'antd';
 
 import format from 'date-fns/format';
+import Icon from "antd/lib/icon";
 
 const GanacheTestChainID = '0x539'
 const GanacheTestChainName = 'Ganache Test Chain'
@@ -316,10 +335,33 @@ const DonationAndVotingSystemContractPage = () => {
         }
         if (GoldContract_Contract) {
             try {
-                await GoldContract_Contract.methods.getGold().send({from: account})
+                await GoldContract_Contract.methods.getGold().send({
+                    from: account,
+                    value: web3.utils.toWei('0.01', 'ether')
+                })
                 getUserInfo()
                 getDonationInfo()
-                setSuccessMessage('成功领取初始金币。')
+                setSuccessMessage('成功兑换10000金币(Gold)。')
+            } catch (error: any) {
+                revertOutput(error)
+            }
+        } else {
+            setErrorMessage('合约不存在！')
+        }
+    }
+
+    // TODO: 手动将gold兑换为ETH
+    const getETH = async () => {
+        if (account === '') {
+            setErrorMessage('你尚未连接钱包！')
+            return
+        }
+        if (GoldContract_Contract) {
+            try {
+                await GoldContract_Contract.methods.getETH().send({from: account})
+                getUserInfo()
+                getDonationInfo()
+                setSuccessMessage('成功兑换为ETH。')
             } catch (error: any) {
                 revertOutput(error)
             }
@@ -337,22 +379,9 @@ const DonationAndVotingSystemContractPage = () => {
         if (DonationAndVotingSystemContract_Contract && AwardContract_Contract) {
             try {
                 // setAwardButtonDisabled(true);  // 禁用按钮，防止重复点击
-                try {
-                    await DonationAndVotingSystemContract_Contract.methods.getAwardReward().send({from: account})
-                } catch (error: any) {
-                    revertOutput("1")
-                    setErrorMessage('1')
-                    console.log("1")
-                }
-                try {
-                    // await new Promise(resolve => setTimeout(resolve, 500)); // 加入短暂延迟，确保链上状态更新
-                    getUserInfo()
-                } catch (error: any) {
-                    revertOutput("2")
-                    setErrorMessage('2')
-                    console.log("2")
-                }
-
+                await DonationAndVotingSystemContract_Contract.methods.getAwardReward().send({from: account})
+                // await new Promise(resolve => setTimeout(resolve, 500)); // 加入短暂延迟，确保链上状态更新
+                getUserInfo()
                 getDonationInfo()
                 setSuccessMessage('恭喜！你获得了纪念品！')
             } catch (error: any) {
@@ -1059,6 +1088,9 @@ const DonationAndVotingSystemContractPage = () => {
         getDonationInfo()
     }
 
+
+
+
     // 用户中心的HTML
     const UserCenter = () => {
         console.log("userInfo: ", userInfo)
@@ -1089,9 +1121,15 @@ const DonationAndVotingSystemContractPage = () => {
                                 {account === '' ? '你尚未连接' : <Tag style={{fontSize: "x-large", padding: "16px"}} icon={<UserOutlined />} color="blue">{account}</Tag>}
                             </Col>
                         </Row>
-                        <Row justify="space-around" align="middle">
-                            <Col span={20}>
-                                {account === "" ? <Button type="primary" size="large" shape="round" icon={<WalletOutlined />} onClick={onClickConnectWallet} >连接钱包</Button> : (userInfo.getInitialGold == true ? <Button type="primary" size="large" shape="round" icon={<DollarCircleOutlined />} onClick={getGold}>领取初始金币Gold</Button> : (userInfo.getAwardReward == true && <Button type="primary" size="large" shape="round" icon={<GiftOutlined />} onClick={getAwardReward}>领取纪念品奖励</Button>))}
+                        <Row justify="space-around" align="middle" gutter={[16, 16]}>
+                            <Col>
+                                {account === "" ? <Button type="primary" size="large" shape="round" icon={<WalletOutlined />} onClick={onClickConnectWallet} >连接钱包</Button> : (<Button type="primary" size="large" shape="round" icon={<GiftOutlined />} onClick={getAwardReward} disabled={!userInfo.getAwardReward} ghost>领取纪念品奖励</Button>)}
+                            </Col>
+                            <Col>
+                                <Button type="primary" size="large" shape="round" icon={<DollarCircleOutlined />} onClick={getGold} disabled={account === ""}>兑换10000金币(Gold)</Button>
+                            </Col>
+                            <Col>
+                                <Button type="primary" size="large" shape="round" icon={<DollarCircleOutlined />} onClick={getETH} disabled={account === "" || userInfo.balance === 0} ghost>兑换ETH</Button>
                             </Col>
                         </Row>
                     </div>

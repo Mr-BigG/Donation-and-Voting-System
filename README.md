@@ -36,18 +36,19 @@
   * 该donation通过后，用户A得到的gold应该是创建donation的费用+实际投票次数的费用，例如创建donation花费1000gold，投了3票approve花费100x3=300gold，则用户A应该得到1000+300=1300gold，但用户A实际得到的gold为1000+100=1100gold，额外的200gold暂不清楚去了哪里。（个人认为原系统的赞同数/反对数是按照人数计算而不是票数计算）
 * 投票相关BUG2：与BUG1类似，用户A创建一个donation，但是A不给自己投票，而是由用户B进行投票且投3次approve，用户A得到的实际gold仍为1000+100=1100gold而不是1000+300=1300gold（个人认为原因类似）
 * 若系统的donation数据量越多，每次投票、创建操作后或刷新操作后加载时间会变长，性能显著下降
+# 2024.10.19 20:00 Guo Shaojie 更新说明：修复原系统ETH => gold不消耗实际的ETH只消耗gas的缺陷，并添加gold => ETH的功能，现在可以自由兑换gold <=> ETH，不算消耗的gas，已经实现原比例兑换，即0.01ETH <=> 10000gold，后续如若盈利可以设置一个反向兑换比例
 
 
 ## 待完成功能
 * 限制每位用户对每个donation的rejected vote数量为1次 ★★★★ CJY
 * 设置一个合适的函数，使得用户对每个donation的每次approval vote的价格逐次递增 ★★★★★ LJY
-* 添加gold => ETH的功能 ★★★★★ LJY / GSJ
+* 添加gold => ETH的功能 ★★★★★ LJY / GSJ （此功能已由GSJ完成，部署最新版项目即可查看）
 * 平台的抽成（后续如果部署在以太坊主网，可以用来盈利） ★★ GSJ
 * 更改前端各个组件的样式、布局、颜色等 ★★★ GSJ
 
 ## 提示
 * 建议使用Remix编写后端，使用IntellIJ编写前端，因为IntellIJ比VS Code方便太多了
-* 每次改动.sol文件后，都需要在Remix编译并复制新的abi，然后将新的abi覆盖掉项目中旧的abi，完成后还需将三个.sol文件使用以下命令重新部署在本地链（ganache）或其它公开链（Sqpolia）。开发建议使用本地链，项目开发完成的时候再部署到公开链，毕竟公开链的ETH很难获取
+* 每次改动.sol文件后，都需要在Remix编译并复制新的abi，然后将新的abi覆盖掉项目中旧的abi，完成后还需将三个.sol文件使用以下命令重新部署在本地链（ganache）或其它公开链（sepolia）。开发建议使用本地链，项目开发完成的时候再部署到公开链，毕竟公开链的ETH很难获取
 ``` shell
 cd contracts
 npx hardhat run ./scripts/deploy.ts --network ganache

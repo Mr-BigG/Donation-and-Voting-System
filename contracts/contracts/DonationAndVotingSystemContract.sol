@@ -23,6 +23,8 @@ import "./StringHelper.sol";
     12. (optional)用户每3个成功的donation都会获得纪念品奖励
 */
 
+
+
 // 合约：捐赠与投票系统合约
 contract DonationAndVotingSystemContract {
 
@@ -88,7 +90,7 @@ contract DonationAndVotingSystemContract {
         _donations.goldConsumedByDonation = goldConsumedByDonation; // 发起捐赠需要消耗的金币数量
         _votes.maxVotingTimes = maxVotingTimes; //最大投票次数
         _votes.goldConsumedByVote = goldConsumedByVote; // 每个投票需要消耗的金币数量
-        gold = new GoldContract("GoldCoin", "gold", initIalUserGold); //一键发金币
+        gold = new GoldContract("GoldCoin", "gold", initIalUserGold); //一键领取金币
         awards = new AwardContract("Awards", "awards"); //一键发纪念品（奖励）
     }
 
@@ -492,4 +494,24 @@ contract DonationAndVotingSystemContract {
     function getGoldConsumedByVote() public view returns (uint) {
         return _votes.goldConsumedByVote;
     }
+
+
+    /*
+    TODO: 每个donation的投票统计原本为人数，现需要改为票数
+    TODO: 每次投票前需要进行如下判定：若该用户还未进行投票，则approve/reject按钮均可用；
+                                若该用户已reject，则approve/reject按钮均不可用；
+                                若该用户已approve，则approve按钮可用，reject按钮不可用
+    */
+
+//    // 用户投票前的判定(针对每一个donation)，参数为当前用户的id
+//    function checkWhetherUserHasAlreadyVotedOnPerDonation(uint id) public view returns (bool) {
+//        // 首先获取用户的投票列表
+//
+//    }
 }
+
+
+
+
+
+
