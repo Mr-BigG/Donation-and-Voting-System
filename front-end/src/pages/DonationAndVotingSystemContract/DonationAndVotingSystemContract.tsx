@@ -402,7 +402,10 @@ const DonationAndVotingSystemContractPage = () => {
         }
         if (DonationAndVotingSystemContract_Contract && GoldContract_Contract) {
             try {
-                await DonationAndVotingSystemContract_Contract.methods.getGoldRewardFromDonationApproved(id).send({from: account})
+                await DonationAndVotingSystemContract_Contract.methods.getGoldRewardFromDonationApproved(id).send({
+                    from: account,
+                    gas: 900000
+                })
                 getUserInfo()
                 getDonationInfo()
                 setSuccessMessage('恭喜！你因为捐赠通过得到了金币Gold奖励！')

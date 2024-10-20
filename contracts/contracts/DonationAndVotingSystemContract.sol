@@ -67,7 +67,7 @@ contract DonationAndVotingSystemContract {
 
     // 所有投票的结构structure
     struct Votes {
-        mapping(address => mapping(uint => Vote[])) getVoteWithAddressAndId; // 所有投票的信息
+        mapping(uint =>  Vote[]) getVoteWithAddressAndId; // 所有投票的信息
         address[] userAddresses; // 用来存储所有用户的地址
         uint maxVotingTimes; // 最大投票次数
         uint goldConsumedByVote; // 投票需要消耗的金币数量
@@ -193,16 +193,12 @@ contract DonationAndVotingSystemContract {
             uint numOfApproval = 0; // 赞成
             uint numOfReject = 0; // 反对
             uint i;
-            for (i = 0; i < _votes.userAddresses.length; i++) {
-                Vote[] memory userVotes = _votes.getVoteWithAddressAndId[_votes.userAddresses[i]][id];
-                if (userVotes.length > 0) {
-                    // 当前用户对该捐赠进行了投票
-                    Vote memory userVote = userVotes[userVotes.length - 1];
-                    if (userVote.status == VoteBehavior.approve) {
-                        numOfApproval++;
-                    } else if (userVote.status == VoteBehavior.reject) {
-                        numOfReject++;
-                    }
+            Vote[] memory votes = _votes.getVoteWithAddressAndId[id];
+            for (i = 0; i < votes.length; i++) {
+                if (votes[i].status == VoteBehavior.approve) {
+                    numOfApproval++;
+                } else if (votes[i].status == VoteBehavior.reject) {
+                    numOfReject++;
                 }
             }
 
@@ -236,16 +232,12 @@ contract DonationAndVotingSystemContract {
             uint numOfApproval = 0; // 赞成
             uint numOfReject = 0; // 反对
             uint i;
-            for (i = 0; i < _votes.userAddresses.length; i++) {
-                Vote[] memory userVotes = _votes.getVoteWithAddressAndId[_votes.userAddresses[i]][id];
-                if (userVotes.length > 0) {
-                    // 当前用户对该捐赠进行了投票
-                    Vote memory userVote = userVotes[userVotes.length - 1];
-                    if (userVote.status == VoteBehavior.approve) {
-                        numOfApproval++;
-                    } else if (userVote.status == VoteBehavior.reject) {
-                        numOfReject++;
-                    }
+            Vote[] memory votes = _votes.getVoteWithAddressAndId[id];
+            for (i = 0; i < votes.length; i++) {
+                if (votes[i].status == VoteBehavior.approve) {
+                    numOfApproval++;
+                } else if (votes[i].status == VoteBehavior.reject) {
+                    numOfReject++;
                 }
             }
 
@@ -295,16 +287,12 @@ contract DonationAndVotingSystemContract {
         uint numOfApproval = 0; // 赞成
         uint numOfReject = 0; // 反对
         uint i;
-        for (i = 0; i < _votes.userAddresses.length; i++) {
-            Vote[] memory userVotes = _votes.getVoteWithAddressAndId[_votes.userAddresses[i]][id];
-            if (userVotes.length > 0) {
-                // 当前用户对捐赠进行了投票
-                Vote memory userVote = userVotes[userVotes.length - 1];
-                if (userVote.status == VoteBehavior.approve) {
-                    numOfApproval++;
-                } else if (userVote.status == VoteBehavior.reject) {
-                    numOfReject++;
-                }
+        Vote[] memory votes = _votes.getVoteWithAddressAndId[id];
+        for (i = 0; i < votes.length; i++) {
+            if (votes[i].status == VoteBehavior.approve) {
+                numOfApproval++;
+            } else if (votes[i].status == VoteBehavior.reject) {
+                numOfReject++;
             }
         }
 
@@ -380,7 +368,7 @@ contract DonationAndVotingSystemContract {
         // 投票已关闭，无法投票 => \u6295\u7968\u5df2\u5173\u95ed\uff0c\u65e0\u6cd5\u6295\u7968
         require(getDonationStatus(id) == DonationStatus.isBeingVotedOn, "\u6295\u7968\u5df2\u5173\u95ed\uff0c\u65e0\u6cd5\u6295\u7968");
         // 已超过最大投票次数，无法投票 => \u5df2\u8d85\u8fc7\u6700\u5927\u6295\u7968\u6b21\u6570\uff0c\u65e0\u6cd5\u6295\u7968
-        require(_votes.getVoteWithAddressAndId[msg.sender][id].length < _votes.maxVotingTimes, "\u5df2\u8d85\u8fc7\u6700\u5927\u6295\u7968\u6b21\u6570\uff0c\u65e0\u6cd5\u6295\u7968");
+        require(_votes.getVoteWithAddressAndId[id].length < _votes.maxVotingTimes, "\u5df2\u8d85\u8fc7\u6700\u5927\u6295\u7968\u6b21\u6570\uff0c\u65e0\u6cd5\u6295\u7968");
         // 余额不足，无法投票 => \u4f59\u989d\u4e0d\u8db3\uff0c\u65e0\u6cd5\u6295\u7968
         require(gold.balanceOf(msg.sender) >= _votes.goldConsumedByVote, "\u4f59\u989d\u4e0d\u8db3\uff0c\u65e0\u6cd5\u6295\u7968");
         // 系统对你的金币没有权限。请授权。 => \u7cfb\u7edf\u5bf9\u4f60\u7684\u91d1\u5e01\u6ca1\u6709\u6743\u9650\u3002\u8bf7\u6388\u6743\u3002
@@ -395,7 +383,7 @@ contract DonationAndVotingSystemContract {
             donationIdVotedOn: id // 投票对象
         });
 
-        _votes.getVoteWithAddressAndId[msg.sender][id].push(newVote); // 添加一个新的投票
+        _votes.getVoteWithAddressAndId[id].push(newVote); // 添加一个新的投票
 
         uint i;
         bool isSenderInUserAddresses = false; // 当前投票人地址是否已经存储
@@ -416,9 +404,9 @@ contract DonationAndVotingSystemContract {
         uint j;
         uint count = 0;
         for (i = 0; i < _donations.donationIds.length; i++) {
-            Vote[] memory userVotes = _votes.getVoteWithAddressAndId[msg.sender][_donations.donationIds[i]];
-            if (userVotes.length > 0) {
-                for (j = 0; j < userVotes.length; j++) {
+            Vote[] memory votes = _votes.getVoteWithAddressAndId[_donations.donationIds[i]];
+            for (j = 0; j < votes.length; j++) {
+                if (votes[j].voter == msg.sender) {
                     count++;
                 }
             }
@@ -430,12 +418,12 @@ contract DonationAndVotingSystemContract {
 
         count = 0;
         for (i = 0; i < _donations.donationIds.length; i++) {
-            Vote[] memory userVotes = _votes.getVoteWithAddressAndId[msg.sender][_donations.donationIds[i]];
-            if (userVotes.length > 0) {
-                for (j = 0; j < userVotes.length; j++) {
-                    status[count] = uint(userVotes[j].status);
-                    voteTime[count] = userVotes[j].voteTime;
-                    donationIdVotedOn[count] = userVotes[j].donationIdVotedOn;
+            Vote[] memory votes = _votes.getVoteWithAddressAndId[_donations.donationIds[i]];
+            for (j = 0; j < votes.length; j++) {
+                if (votes[j].voter == msg.sender) {
+                    status[count] = uint(votes[j].status);
+                    voteTime[count] = votes[j].voteTime;
+                    donationIdVotedOn[count] = votes[j].donationIdVotedOn;
                     count++;
                 }
             }
@@ -446,36 +434,27 @@ contract DonationAndVotingSystemContract {
 
     // 指定id的捐赠的投票信息
     function getDonationVotesInformation(uint id, uint timeNow) public view returns (uint[] memory, uint[] memory, address[] memory) {
-        uint i;
-        uint count = 0;
-        for (i = 0; i < _votes.userAddresses.length; i++) {
-            Vote[] memory userVotes = _votes.getVoteWithAddressAndId[_votes.userAddresses[i]][id];
-            if (userVotes.length > 0) {
-                count++;
-            }
-        }
 
-        uint[] memory status = new uint[](count);
-        uint[] memory voteTime = new uint[](count);
-        address[] memory voter = new address[](count);
+        Vote[] memory votes = _votes.getVoteWithAddressAndId[id];
+        uint[] memory status = new uint[](votes.length);
+        uint[] memory voteTime = new uint[](votes.length);
+        address[] memory voter = new address[](votes.length);
 
-        count = 0;
 
-        for (i = 0; i < _votes.userAddresses.length; i++) {
-            Vote[] memory userVotes = _votes.getVoteWithAddressAndId[_votes.userAddresses[i]][id];
-            if (userVotes.length > 0) {
-                status[count] = uint(userVotes[userVotes.length - 1].status);
-                voteTime[count] = userVotes[userVotes.length - 1].voteTime;
-                voter[count] = userVotes[userVotes.length - 1].voter;
-                count++;
-            }
+        uint i = 0;
+        for (i = 0; i < votes.length; i++) {
+
+            status[i] = uint(votes[i].status);
+            voteTime[i] = votes[i].voteTime;
+            voter[i] = votes[i].voter;
+
         }
 
         if ((msg.sender == _donations.getDonationWithId[id].creator) || (getDonationStatus(id, timeNow) != DonationStatus.isBeingVotedOn)) {
             return (status, voteTime, voter);
         } else {
-            voteTime = new uint[](count); // 全为0
-            voter = new address[](count); // 全为0
+            voteTime = new uint[](votes.length); // 全为0
+            voter = new address[](votes.length); // 全为0
             return (status, voteTime, voter);
         }
     }
