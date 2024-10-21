@@ -67,7 +67,7 @@ contract DonationAndVotingSystemContract {
 
     // 所有投票的结构structure
     struct Votes {
-        mapping(uint =>  Vote[]) getVoteWithAddressAndId; // 所有投票的信息
+        mapping(uint => Vote[]) getVoteWithAddressAndId; // 所有投票的信息
         address[] userAddresses; // 用来存储所有用户的地址
         uint maxVotingTimes; // 最大投票次数
         uint goldConsumedByVote; // 投票需要消耗的金币数量
@@ -84,6 +84,9 @@ contract DonationAndVotingSystemContract {
     Votes private _votes; // 表示所有投票的信息
     GoldContract public gold; // 本系统的货币：金币（即通证积分）
     AwardContract public awards; // 纪念品(奖励)
+
+    // 直接存储用户的投票记录，映射: 用户地址 -> 捐赠ID -> 投票数组
+    mapping(address => mapping(uint => Vote[])) private _userVotes;
 
     // 构造函数
     constructor(uint maxVotingTimes, uint goldConsumedByDonation, uint goldConsumedByVote, uint initIalUserGold) {
@@ -363,16 +366,75 @@ contract DonationAndVotingSystemContract {
         }
     }
 
+
+    error ExceededMaxVotes(uint maxVotes);
+    event VoteRejected(string reason);
+
+    // 检查是否到达最大投票次数
+    function checkWhetherReachedTheMaxVotingTimes(uint id) view public returns (bool) {
+        if (_votes.getVoteWithAddressAndId[id].length >= _votes.maxVotingTimes) {
+            return false;
+        }
+        return true;
+    }
+
+    // 检查投票逻辑
+    function checkVotingConditions(uint donationId, uint userVote) public view returns (bool) {
+        Vote[] storage userVotes = _userVotes[msg.sender][donationId];
+        VoteBehavior behavior = VoteBehavior(userVote);
+        bool isFirstVote = userVotes.length == 0; // 是否为第一次投票
+
+        if (isFirstVote) {
+            // 如果是第一次投票，返回 true
+            return true;
+        }
+
+        // 如果不是第一次投票，检查历史投票
+        for (uint i = 0; i < userVotes.length; i++) {
+            if (behavior == VoteBehavior.approve && userVotes[i].status == VoteBehavior.reject) {
+                // 如果是 approve 投票，且之前有 reject，不能投 approve
+                return false;
+            }
+            if (behavior == VoteBehavior.reject && userVotes[i].status == VoteBehavior.approve) {
+                // 如果是 reject 投票，且之前有 approve，不能投 reject
+                return false;
+            }
+        }
+
+        // 所有检查通过，允许投票
+        return true;
+    }
+
+    // 新增函数：记录用户投票
+    function recordUserVote(uint donationId, uint userVote) public {
+        VoteBehavior behavior = VoteBehavior(userVote);
+        _userVotes[msg.sender][donationId].push(Vote({
+            status: behavior,
+            voter: msg.sender,
+            voteTime: block.timestamp,
+            donationIdVotedOn: donationId
+        }));
+    }
+
     // 发起一个新的投票
     function voteOnDonation(uint userVote, uint id) public {
         // 投票已关闭，无法投票 => \u6295\u7968\u5df2\u5173\u95ed\uff0c\u65e0\u6cd5\u6295\u7968
         require(getDonationStatus(id) == DonationStatus.isBeingVotedOn, "\u6295\u7968\u5df2\u5173\u95ed\uff0c\u65e0\u6cd5\u6295\u7968");
         // 已超过最大投票次数，无法投票 => \u5df2\u8d85\u8fc7\u6700\u5927\u6295\u7968\u6b21\u6570\uff0c\u65e0\u6cd5\u6295\u7968
-        require(_votes.getVoteWithAddressAndId[id].length < _votes.maxVotingTimes, "\u5df2\u8d85\u8fc7\u6700\u5927\u6295\u7968\u6b21\u6570\uff0c\u65e0\u6cd5\u6295\u7968");
+//        require(_votes.getVoteWithAddressAndId[id].length < _votes.maxVotingTimes, "You have reached the max voting times");
+//        if (_votes.getVoteWithAddressAndId[id].length >= _votes.maxVotingTimes) {
+//            emit VoteRejected("You have reached the max voting times");
+//            revert("You have reached the max voting times");
+//            require(false, "You have reached the max voting times");
+//        }
+
         // 余额不足，无法投票 => \u4f59\u989d\u4e0d\u8db3\uff0c\u65e0\u6cd5\u6295\u7968
         require(gold.balanceOf(msg.sender) >= _votes.goldConsumedByVote, "\u4f59\u989d\u4e0d\u8db3\uff0c\u65e0\u6cd5\u6295\u7968");
         // 系统对你的金币没有权限。请授权。 => \u7cfb\u7edf\u5bf9\u4f60\u7684\u91d1\u5e01\u6ca1\u6709\u6743\u9650\u3002\u8bf7\u6388\u6743\u3002
         require(gold.allowance(msg.sender, address(this)) >= _votes.goldConsumedByVote, "\u7cfb\u7edf\u5bf9\u4f60\u7684\u91d1\u5e01\u6ca1\u6709\u6743\u9650\u3002\u8bf7\u6388\u6743\u3002");
+
+        // TODO: 对新的投票进行判定，若为初次投票，则可以进行投票；若已拒绝，则不可再投任何票；若已同意，则不可再拒绝
+
 
         gold.transferFrom(msg.sender, address(this), _votes.goldConsumedByVote); // 委托本合约把用户的金币gold转账给本合约（需要前端提前委托）
 
@@ -396,6 +458,8 @@ contract DonationAndVotingSystemContract {
         if (!isSenderInUserAddresses) {
             _votes.userAddresses.push(msg.sender); // 添加一个新地址
         }
+
+        recordUserVote(id, userVote);
     }
 
     // 用户投票信息
@@ -476,7 +540,7 @@ contract DonationAndVotingSystemContract {
 
 
     /*
-    TODO: 每个donation的投票统计原本为人数，现需要改为票数
+    TODO: 每个donation的投票统计原本为人数，现需要改为票数(已完成)
     TODO: 每次投票前需要进行如下判定：若该用户还未进行投票，则approve/reject按钮均可用；
                                 若该用户已reject，则approve/reject按钮均不可用；
                                 若该用户已approve，则approve按钮可用，reject按钮不可用

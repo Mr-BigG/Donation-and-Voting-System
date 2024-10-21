@@ -1,5 +1,6 @@
 /* eslint-disable */
 import React, { useEffect, useState } from "react";
+// @ts-ignore
 import { DonationAndVotingSystemContract_Contract, GoldContract_Contract, AwardContract_Contract, web3 } from "../../utils/contracts"
 import './DonationAndVotingSystemContract.css'
 
@@ -19,6 +20,12 @@ import {
     CheckSquareOutlined,
     CloseSquareOutlined,
     HighlightOutlined,
+    DiffTwoTone,
+    CheckSquareFilled,
+    CloseSquareFilled,
+    ApiFilled,
+    EuroOutlined,
+    ExclamationCircleFilled
 } from '@ant-design/icons';
 
 import type { RangePickerProps } from "antd/es/date-picker";
@@ -41,11 +48,12 @@ import {
     DatePicker,
     Popconfirm,
     Dropdown,
-    Space
+    Space,
 } from 'antd';
 
 import format from 'date-fns/format';
 import Icon from "antd/lib/icon";
+import assert from "assert";
 
 const GanacheTestChainID = '0x539'
 const GanacheTestChainName = 'Ganache Test Chain'
@@ -73,6 +81,7 @@ const DonationAndVotingSystemContractPage = () => {
         const { ethereum } = window;
         if (Boolean(ethereum && ethereum.isMetaMask)) {
             // 尝试获取连接到用户账户
+            // @ts-ignore
             const accounts = await web3.eth.getAccounts()
             if (accounts && accounts.length) {
                 setAccount(accounts[0])
@@ -329,6 +338,7 @@ const DonationAndVotingSystemContractPage = () => {
 
     // 手动领取金币Gold
     const getGold = async () => {
+        setGetGoldSubmittedLoading(true)
         if (account === '') {
             setErrorMessage('你尚未连接钱包！')
             return
@@ -337,6 +347,7 @@ const DonationAndVotingSystemContractPage = () => {
             try {
                 await GoldContract_Contract.methods.getGold().send({
                     from: account,
+                    // @ts-ignore
                     value: web3.utils.toWei('0.01', 'ether')
                 })
                 getUserInfo()
@@ -348,10 +359,12 @@ const DonationAndVotingSystemContractPage = () => {
         } else {
             setErrorMessage('合约不存在！')
         }
+        setGetGoldSubmittedLoading(false)
     }
 
     // TODO: 手动将gold兑换为ETH
     const getETH = async () => {
+        setGetETHSubmittedLoading(true)
         if (account === '') {
             setErrorMessage('你尚未连接钱包！')
             return
@@ -368,10 +381,12 @@ const DonationAndVotingSystemContractPage = () => {
         } else {
             setErrorMessage('合约不存在！')
         }
+        setGetETHSubmittedLoading(false)
     }
 
     // 手动领取纪念品
     const getAwardReward = async () => {
+        setGetAwardRewardSubmittedLoading(true)
         if (account === '') {
             setErrorMessage('你尚未连接钱包！')
             return
@@ -392,6 +407,7 @@ const DonationAndVotingSystemContractPage = () => {
         } else {
             setErrorMessage('合约不存在！')
         }
+        setGetAwardRewardSubmittedLoading(false)
     }
 
     // 手动领取金币奖励
@@ -424,6 +440,7 @@ const DonationAndVotingSystemContractPage = () => {
             return
         }
         if (DonationAndVotingSystemContract_Contract && GoldContract_Contract) {
+            // 前端判定用户是否到达了最大投票次数
             try {
                 await GoldContract_Contract.methods.approve(DonationAndVotingSystemContract_Contract.options.address, goldConsumedByDonation).send({from: account})
                 await DonationAndVotingSystemContract_Contract.methods.addNewDonation(content, startTime, endTime).send({from: account})
@@ -440,6 +457,7 @@ const DonationAndVotingSystemContractPage = () => {
         }
     }
 
+
     // 手动投票
     const voteOnDonation = async (behavior: number, id: number) => {
         if (account === '') {
@@ -448,8 +466,33 @@ const DonationAndVotingSystemContractPage = () => {
         }
         if (DonationAndVotingSystemContract_Contract && GoldContract_Contract) {
             try {
+                // 检查是否到达最大投票次数
+                const canVote = await DonationAndVotingSystemContract_Contract.methods.checkWhetherReachedTheMaxVotingTimes(id).call({from: account})
+                console.log("canVote: ", canVote)
+                if (canVote === false) {
+                    setErrorMessage('当前捐赠您已到达最大投票次数！')
+                    return
+                }
+
+                // 检查投票是否合法
+                const canVote2 = await DonationAndVotingSystemContract_Contract.methods.checkVotingConditions(id, behavior).call({from: account})
+                console.log("canVote2: ", canVote2)
+                if (canVote2 === false) {
+                    setErrorMessage('您的投票不合法！您的投票必须和之前的投票一致！')
+                    return
+                }
+
                 await GoldContract_Contract.methods.approve(DonationAndVotingSystemContract_Contract.options.address, goldConsumedByVote).send({from: account})
-                await DonationAndVotingSystemContract_Contract.methods.voteOnDonation(behavior, id).send({from: account})
+                await DonationAndVotingSystemContract_Contract.methods.voteOnDonation(behavior, id).send({from: account}).catch((error: any) => {
+                    console.log("异常error: ", error.message)
+                    console.log('Full error object:', JSON.stringify(error, null, 2)); // 打印完整错误对象
+                })
+                await DonationAndVotingSystemContract_Contract.events.VoteRejected().on('data', (event: any) => {
+                    console.log("event: ", event)
+                }).on('error', console.error)
+
+                await DonationAndVotingSystemContract_Contract.methods.recordUserVote(id, behavior).call({from: account})
+
                 getUserInfo()
                 getDonationInfo()
                 if (behavior === 1) {
@@ -458,6 +501,8 @@ const DonationAndVotingSystemContractPage = () => {
                     setSuccessMessage('你成功投出了反对票。请记住，你共有' + maxVotingTimes + '次投票机会。')
                 }
             } catch (error: any) {
+                console.log('error: ', error)
+                // console.log('error.data: ', error.data)
                 revertOutput(error)
             }
         } else {
@@ -529,10 +574,10 @@ const DonationAndVotingSystemContractPage = () => {
                         button_action =
                             <div>
                                 <Popconfirm title={"投票将消耗" + goldConsumedByVote + " Gold。你目前拥有" + userInfo.balance + " Gold。确定继续吗？！"} onConfirm={() => voteOnDonation(1, item.id)} okText="确定" cancelText="取消" placement="leftTop">
-                                    <Button icon={<CheckSquareOutlined />}>赞成</Button>
+                                    <Button icon={<CheckSquareFilled />}>赞成</Button>
                                 </Popconfirm>
                                 <Popconfirm title={"投票将消耗" + goldConsumedByVote + " Gold。你目前拥有" + userInfo.balance + " Gold。确定继续吗？"} onConfirm={() => voteOnDonation(0, item.id)} okText="确定" cancelText="取消" placement="leftTop">
-                                    <Button icon={<CloseSquareOutlined />}>反对</Button>
+                                    <Button icon={<CloseSquareFilled />}>反对</Button>
                                 </Popconfirm>
                             </div>;
                     } else if (item.status === 2 && item.getGoldReward === true) {
@@ -540,6 +585,7 @@ const DonationAndVotingSystemContractPage = () => {
 
                     }
                     return {
+                        key: item.id,
                         id: item.id,
                         voteStartTime: getDate(item.voteStartTime),
                         voteEndTime: getDate(item.voteEndTime),
@@ -564,16 +610,17 @@ const DonationAndVotingSystemContractPage = () => {
                         button_action =
                             <div>
                                 <Popconfirm title={"投票将消耗" + goldConsumedByVote + " Gold。你目前拥有" + userInfo.balance + " Gold。确定继续吗？"} onConfirm={() => voteOnDonation(1, item.id)} okText="确定" cancelText="取消" placement="leftTop">
-                                    <Button icon={<CheckSquareOutlined />}>赞成</Button>
+                                    <Button icon={<CheckSquareFilled />}>赞成</Button>
                                 </Popconfirm>
                                 <Popconfirm title={"投票将消耗" + goldConsumedByVote + " Gold。你目前拥有" + userInfo.balance + " Gold。确定继续吗？"} onConfirm={() => voteOnDonation(0, item.id)} okText="确定" cancelText="取消" placement="leftTop">
-                                    <Button icon={<CloseSquareOutlined />}>反对</Button>
+                                    <Button icon={<CloseSquareFilled />}>反对</Button>
                                 </Popconfirm>
                             </div>;
                     } else if (item.status === 2 && item.getGoldReward === true) {
                         button_action = <Button icon={<DollarCircleOutlined />} onClick={() => getGoldRewardFromDonationApproved(item.id)}>领取金币Gold奖励</Button>;
                     }
                     return {
+                        key: item.id,
                         id: item.id,
                         voteStartTime: getDate(item.voteStartTime),
                         voteEndTime: getDate(item.voteEndTime),
@@ -601,8 +648,8 @@ const DonationAndVotingSystemContractPage = () => {
                     if (item.status === 0) {
                         button_action =
                             <div>
-                                <Button icon={<CheckSquareOutlined />} onClick={() => voteOnDonation(1, item.id)}>赞成</Button>
-                                <Button icon={<CloseSquareOutlined />} onClick={() => voteOnDonation(0, item.id)}>反对</Button>
+                                <Button icon={<CheckSquareFilled />} onClick={() => voteOnDonation(1, item.id)}>赞成</Button>
+                                <Button icon={<CloseSquareFilled />} onClick={() => voteOnDonation(0, item.id)}>反对</Button>
                             </div>;
                     } else if (item.status === 2 && item.getGoldReward === true) {
                         button_action =
@@ -652,6 +699,7 @@ const DonationAndVotingSystemContractPage = () => {
                 setUserVoteData(userInfo.votesInfo.map((item) => {
                     console.log("item: ", item)
                     return {
+                        key: item.donationIdVotedOn,
                         behavior: (item.behavior == 1 ? "赞成" : "反对"),
                         voteTime: getDate(item.voteTime),
                         donationIdVotedOn: item.donationIdVotedOn, // undefined
@@ -959,6 +1007,10 @@ const DonationAndVotingSystemContractPage = () => {
 
     const [open, setOpen] = useState(false)
     const [submit, setSubmit] = useState(false)
+    const [donationSubmittedLoading, setDonationSubmittedLoading] = useState(false)
+    const [getGoldSubmittedLoading, setGetGoldSubmittedLoading] = useState(false)
+    const [getETHSubmittedLoading, setGetETHSubmittedLoading] = useState(false)
+    const [getAwardRewardSubmittedLoading, setGetAwardRewardSubmittedLoading] = useState(false)
 
     const showModal = () => {
         setOpen(true)
@@ -966,7 +1018,9 @@ const DonationAndVotingSystemContractPage = () => {
     }
 
     const handleOk = async () => {
+        setDonationSubmittedLoading(true)
         await addNewDonation(_donationContent, _startTime, _endTime)
+        setDonationSubmittedLoading(false)
     }
 
     const handleCancel = () => {
@@ -1025,7 +1079,7 @@ const DonationAndVotingSystemContractPage = () => {
                         <Row justify="space-around" align="middle">
                             <Col span={20}>
                                 <Popconfirm title={"提交捐赠将消耗" + goldConsumedByDonation + " Gold。你目前拥有" + userInfo.balance + " Gold。确定继续吗？"} onConfirm={showModal} okText="确定" cancelText="取消" placement="top">
-                                    {account !== "" && <Button type="primary" size="large" shape="round" icon={<FileAddOutlined />}>发起捐赠</Button>}
+                                    {account === "" ? <Button type="primary" size="large" shape="round" icon={<ExclamationCircleFilled />} disabled={true}>您尚未连接钱包</Button> : account !== "" && userInfo.balance >= 1000 ? <Button type="primary" size="large" shape="round" icon={<DiffTwoTone />}>发起捐赠</Button> : <Button type="primary" size="large" shape="round" icon={<FileAddOutlined />} disabled={true}>您的余额已不足1000</Button>}
                                 </Popconfirm>
                             </Col>
                         </Row>
@@ -1037,9 +1091,11 @@ const DonationAndVotingSystemContractPage = () => {
                         title="发起捐赠"
                         onOk={handleOk}
                         onCancel={handleCancel}
+                        maskClosable={false} // 点击遮罩区域时不会关闭
+                        forceRender // 确保对话框内的内容在初次打开时已准备好，避免焦点问题
                         footer={[
                             <Button key="back" onClick={handleCancel}>取消</Button>,
-                            <Button key="submit" type="primary" onClick={handleOk} disabled={submit}>{submit === true ? "捐赠已提交" : "提交捐赠"}</Button>
+                            <Button key="submit" type="primary" onClick={handleOk} disabled={submit} loading={donationSubmittedLoading}>{submit === true ? "捐赠已提交" : "提交捐赠"}</Button>
                         ]}>
                         {(errorMessage !== "" && open === true) && <Alert type="error" message={errorMessage} banner closable afterClose={() => setErrorMessage("")} />}
                         {(successMessage !== "" && open === true) && <Alert type="success" message={successMessage} banner closable afterClose={() => setSuccessMessage("")} />}
@@ -1116,23 +1172,23 @@ const DonationAndVotingSystemContractPage = () => {
                     <div className="userBar">
                         <Row justify="space-around" align="middle" style={{fontSize: "xxx-large"}}>
                             <Col span={20}>
-                                <GitlabFilled />
+                                <GitlabFilled color="green" />
                             </Col>
                         </Row>
                         <Row justify="space-around" align="middle">
                             <Col span={20}>
-                                {account === '' ? '你尚未连接' : <Tag style={{fontSize: "x-large", padding: "16px"}} icon={<UserOutlined />} color="blue">{account}</Tag>}
+                                {account === '' ? '你尚未连接' : <Tag style={{fontSize: "x-large", padding: "16px"}} icon={<UserOutlined />} color="#87d068">{account}</Tag>}
                             </Col>
                         </Row>
                         <Row justify="space-around" align="middle" gutter={[16, 16]}>
                             <Col>
-                                {account === "" ? <Button type="primary" size="large" shape="round" icon={<WalletOutlined />} onClick={onClickConnectWallet} >连接钱包</Button> : (<Button type="primary" size="large" shape="round" icon={<GiftOutlined />} onClick={getAwardReward} disabled={!userInfo.getAwardReward} ghost>领取纪念品奖励</Button>)}
+                                {account === "" ? <Button type="primary" size="large" shape="round" icon={<ApiFilled />} onClick={onClickConnectWallet} >连接钱包</Button> : (<Button type="primary" size="large" shape="round" icon={<GiftOutlined />} onClick={getAwardReward} disabled={!userInfo.getAwardReward} loading={getAwardRewardSubmittedLoading} ghost>领取纪念品奖励</Button>)}
                             </Col>
                             <Col>
-                                <Button type="primary" size="large" shape="round" icon={<DollarCircleOutlined />} onClick={getGold} disabled={account === ""}>兑换10000金币(Gold)</Button>
+                                <Button type="primary" size="large" shape="round" icon={<DollarCircleOutlined />} onClick={getGold} disabled={account === ""} loading={getGoldSubmittedLoading}>兑换10000金币(Gold)</Button>
                             </Col>
                             <Col>
-                                <Button type="primary" size="large" shape="round" icon={<DollarCircleOutlined />} onClick={getETH} disabled={account === "" || userInfo.balance === 0} ghost>兑换ETH</Button>
+                                <Button type="primary" size="large" shape="round" icon={<EuroOutlined />} onClick={getETH} disabled={account === "" || userInfo.balance === 0} loading={getETHSubmittedLoading} ghost>兑换ETH</Button>
                             </Col>
                         </Row>
                     </div>
@@ -1153,6 +1209,8 @@ const DonationAndVotingSystemContractPage = () => {
                         open={open_}
                         title={"捐赠" + voteInfoId + "的投票详情"}
                         onCancel={handleCancel_}
+                        maskClosable={false} // 点击遮罩区域时不会关闭
+                        forceRender // 确保对话框内的内容在初次打开时已准备好，避免焦点问题
                         width={800}
                         footer={[
                             <Button key="ok" type="primary" onClick={handleCancel_}>确定</Button>
@@ -1179,7 +1237,8 @@ const DonationAndVotingSystemContractPage = () => {
                     position: 'fixed',
                     left: 0,
                     top: 0,
-                    bottom: 0
+                    bottom: 0,
+                    display: 'fixed'
                 }}
                 theme="light"
             >

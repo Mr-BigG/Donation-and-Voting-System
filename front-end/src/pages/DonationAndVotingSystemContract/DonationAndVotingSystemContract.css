@@ -52,3 +52,11 @@
     display: flex;
     gap: 10px; /* 设置按钮之间的间距 */
 }
+
+.logo {
+    height: 32px; /* 设置合适的高度 */
+    padding: 8px; /* 设置内边距，确保文字与边缘有一定距离 */
+    display: flex; /* 使用 flex 布局 */
+    align-items: center; /* 垂直居中 */
+    font-size: 20px; /* 调整文字大小 */
+}

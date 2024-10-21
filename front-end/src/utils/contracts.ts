@@ -8,7 +8,21 @@ const Web3 = require('web3');
 
 // 创建web3实例
 // @ts-ignore
-let web3 = new Web3(window.web3.currentProvider);
+let web3;
+
+// @ts-ignore
+if (window.ethereum) {
+    // @ts-ignore
+    web3 = new Web3(window.ethereum);
+    console.log("MetaMask 已连接");
+    // @ts-ignore
+} else if (window.web3) {
+    // @ts-ignore
+    web3 = new Web3(window.web3.currentProvider);
+    console.warn("使用了旧版的 MetaMask provider");
+} else {
+    console.error('没有检测到 MetaMask，请安装 MetaMask 扩展程序');
+}
 
 // 修改地址为部署的合约地址
 // ABI文件为合约编译后自动生成？

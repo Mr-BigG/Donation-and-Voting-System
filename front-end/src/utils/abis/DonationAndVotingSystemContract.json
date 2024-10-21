@@ -31,6 +31,30 @@
     {
       "inputs": [
         {
+          "internalType": "uint256",
+          "name": "maxVotes",
+          "type": "uint256"
+        }
+      ],
+      "name": "ExceededMaxVotes",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "reason",
+          "type": "string"
+        }
+      ],
+      "name": "VoteRejected",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "string",
           "name": "content",
           "type": "string"
@@ -59,6 +83,49 @@
           "internalType": "contract AwardContract",
           "name": "",
           "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "donationId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "userVote",
+          "type": "uint256"
+        }
+      ],
+      "name": "checkVotingConditions",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        }
+      ],
+      "name": "checkWhetherReachedTheMaxVotingTimes",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
         }
       ],
       "stateMutability": "view",
@@ -360,6 +427,24 @@
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "donationId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "userVote",
+          "type": "uint256"
+        }
+      ],
+      "name": "recordUserVote",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
