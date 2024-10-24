@@ -60,3 +60,10 @@
     align-items: center; /* 垂直居中 */
     font-size: 20px; /* 调整文字大小 */
 }
+
+.allDonationTable {
+    background-image: url('../../../public/ETH.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}

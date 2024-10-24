@@ -85,11 +85,14 @@ contract DonationAndVotingSystemContract {
     GoldContract public gold; // 本系统的货币：金币（即通证积分）
     AwardContract public awards; // 纪念品(奖励)
 
+    address public admin; // 合约管理员（创建者）
+
     // 直接存储用户的投票记录，映射: 用户地址 -> 捐赠ID -> 投票数组
     mapping(address => mapping(uint => Vote[])) private _userVotes;
 
     // 构造函数
     constructor(uint maxVotingTimes, uint goldConsumedByDonation, uint goldConsumedByVote, uint initIalUserGold) {
+        admin = msg.sender; // 合约创建者的地址
         _donations.goldConsumedByDonation = goldConsumedByDonation; // 发起捐赠需要消耗的金币数量
         _votes.maxVotingTimes = maxVotingTimes; //最大投票次数
         _votes.goldConsumedByVote = goldConsumedByVote; // 每个投票需要消耗的金币数量
@@ -279,7 +282,6 @@ contract DonationAndVotingSystemContract {
     }
 
 
-
     // 领取gold金币奖励
     function getGoldRewardFromDonationApproved(uint id) public {
         // 由于一些原因，你无法获得金币奖励 => \u7531\u4e8e\u4e00\u4e9b\u539f\u56e0\uff0c\u4f60\u65e0\u6cd5\u83b7\u5f97\u91d1\u5e01\u5956\u52b1
@@ -372,7 +374,8 @@ contract DonationAndVotingSystemContract {
 
     // 检查是否到达最大投票次数
     function checkWhetherReachedTheMaxVotingTimes(uint id) view public returns (bool) {
-        if (_votes.getVoteWithAddressAndId[id].length >= _votes.maxVotingTimes) {
+        Vote[] storage userVotes = _userVotes[msg.sender][id];
+        if (userVotes.length >= _votes.maxVotingTimes) {
             return false;
         }
         return true;
@@ -438,7 +441,7 @@ contract DonationAndVotingSystemContract {
         // 系统对你的金币没有权限。请授权。 => \u7cfb\u7edf\u5bf9\u4f60\u7684\u91d1\u5e01\u6ca1\u6709\u6743\u9650\u3002\u8bf7\u6388\u6743\u3002
         require(gold.allowance(msg.sender, address(this)) >= _votes.goldConsumedByVote, "\u7cfb\u7edf\u5bf9\u4f60\u7684\u91d1\u5e01\u6ca1\u6709\u6743\u9650\u3002\u8bf7\u6388\u6743\u3002");
 
-        // TODO: 对新的投票进行判定，若为初次投票，则可以进行投票；若已拒绝，则不可再投任何票；若已同意，则不可再拒绝
+        // TODO: 对新的投票进行判定，若为初次投票，则可以进行投票；若已拒绝，则不可再投任何票；若已同意，则不可再拒绝(已完成)
 
 
         gold.transferFrom(msg.sender, address(this), _votes.goldConsumedByVote); // 委托本合约把用户的金币gold转账给本合约（需要前端提前委托）
@@ -527,6 +530,159 @@ contract DonationAndVotingSystemContract {
             return (status, voteTime, voter);
         }
     }
+    
+    // TODO: 实现donation的排行榜(已完成)
+    function getDonationRankingList(uint flag) public view returns (Donation[] memory, uint[] memory, uint[] memory) {
+        // flag为1，获取通过的donation的排行榜；flag为0，获取失败的donation的排行榜
+        if (flag == 1) {
+            // 获取所有通过的捐赠
+            uint approvedCount = 0;
+            for (uint i = 0; i < _donations.donationIds.length; i++) {
+                if (getDonationStatus(_donations.donationIds[i]) == DonationStatus.isApproved) {
+                    approvedCount++;
+                }
+            }
+
+            // 初始化通过的捐赠数组
+            Donation[] memory approvedDonations = new Donation[](approvedCount);
+            uint[] memory approveVotes = new uint[](approvedCount);
+            uint[] memory rejectVotes = new uint[](approvedCount);
+
+            uint index = 0;
+            // 填充通过的捐赠信息和票数
+            for (uint i = 0; i < _donations.donationIds.length; i++) {
+                uint donationId = _donations.donationIds[i];
+                if (getDonationStatus(donationId) == DonationStatus.isApproved) {
+                    approvedDonations[index] = _donations.getDonationWithId[donationId];
+                    uint numOfApproval = 0;
+                    uint numOfReject = 0;
+                    Vote[] memory votes = _votes.getVoteWithAddressAndId[donationId];
+                    for (uint j = 0; j < votes.length; j++) {
+                        if (votes[j].status == VoteBehavior.approve) {
+                            numOfApproval++;
+                        } else if (votes[j].status == VoteBehavior.reject) {
+                            numOfReject++;
+                        }
+                    }
+                    approveVotes[index] = numOfApproval;
+                    rejectVotes[index] = numOfReject;
+                    index++;
+                }
+            }
+
+            // 对通过的捐赠按照赞成票数从高到低，若相同则按照反对票数从低到高进行排序
+            for (uint i = 0; i < approvedCount; i++) {
+                for (uint j = i + 1; j < approvedCount; j++) {
+                    if (
+                        approveVotes[i] < approveVotes[j] ||
+                        (approveVotes[i] == approveVotes[j] && rejectVotes[i] > rejectVotes[j])
+                    ) {
+                        // 交换捐赠信息
+                        Donation memory tempDonation = approvedDonations[i];
+                        approvedDonations[i] = approvedDonations[j];
+                        approvedDonations[j] = tempDonation;
+
+                        // 交换赞成票数和反对票数
+                        uint tempApprove = approveVotes[i];
+                        approveVotes[i] = approveVotes[j];
+                        approveVotes[j] = tempApprove;
+
+                        uint tempReject = rejectVotes[i];
+                        rejectVotes[i] = rejectVotes[j];
+                        rejectVotes[j] = tempReject;
+                    }
+                }
+            }
+
+            return (approvedDonations, approveVotes, rejectVotes);
+        } else {
+            // 获取所有失败的捐赠
+            uint rejectedCount = 0;
+            for (uint i = 0; i < _donations.donationIds.length; i++) {
+                if (getDonationStatus(_donations.donationIds[i]) == DonationStatus.isRejected) {
+                    rejectedCount++;
+                }
+            }
+
+            // 初始化失败的捐赠数组
+            Donation[] memory rejectedDonations = new Donation[](rejectedCount);
+            uint[] memory approveVotes = new uint[](rejectedCount);
+            uint[] memory rejectVotes = new uint[](rejectedCount);
+
+            uint index = 0;
+            // 填充失败的捐赠信息和票数
+            for (uint i = 0; i < _donations.donationIds.length; i++) {
+                uint donationId = _donations.donationIds[i];
+                if (getDonationStatus(donationId) == DonationStatus.isRejected) {
+                    rejectedDonations[index] = _donations.getDonationWithId[donationId];
+                    uint numOfApproval = 0;
+                    uint numOfReject = 0;
+                    Vote[] memory votes = _votes.getVoteWithAddressAndId[donationId];
+                    for (uint j = 0; j < votes.length; j++) {
+                        if (votes[j].status == VoteBehavior.reject) {
+                            numOfReject++;
+                        } else if (votes[j].status == VoteBehavior.approve) {
+                            numOfApproval++;
+                        }
+                    }
+                    approveVotes[index] = numOfApproval;
+                    rejectVotes[index] = numOfReject;
+                    index++;
+                }
+            }
+
+            // 对失败的捐赠按照反对票数从高到低，若相同则按照赞成票数从低到高进行排序
+            for (uint i = 0; i < rejectedCount; i++) {
+                for (uint j = i + 1; j < rejectedCount; j++) {
+                    if (
+                        rejectVotes[i] < rejectVotes[j] ||
+                        (rejectVotes[i] == rejectVotes[j] && approveVotes[i] > approveVotes[j])
+                    ) {
+                        // 交换捐赠信息
+                        Donation memory tempDonation = rejectedDonations[i];
+                        rejectedDonations[i] = rejectedDonations[j];
+                        rejectedDonations[j] = tempDonation;
+
+                        // 交换赞成票数和反对票数
+                        uint tempApprove = approveVotes[i];
+                        approveVotes[i] = approveVotes[j];
+                        approveVotes[j] = tempApprove;
+
+                        uint tempReject = rejectVotes[i];
+                        rejectVotes[i] = rejectVotes[j];
+                        rejectVotes[j] = tempReject;
+                    }
+                }
+            }
+
+            return (rejectedDonations, approveVotes, rejectVotes);
+        }
+    }
+    
+    // 获取赞成票数
+    function getApproveVoteCount(uint donationId) internal view returns (uint) {
+        Vote[] memory votes = _votes.getVoteWithAddressAndId[donationId];
+        uint approveCount = 0;
+        for (uint i = 0; i < votes.length; i++) {
+            if (votes[i].status == VoteBehavior.approve) {
+                approveCount++;
+            }
+        }
+        return approveCount;
+    }
+
+    // 获取反对票数
+    function getRejectVoteCount(uint donationId) internal view returns (uint) {
+        Vote[] memory votes = _votes.getVoteWithAddressAndId[donationId];
+        uint rejectCount = 0;
+        for (uint i = 0; i < votes.length; i++) {
+            if (votes[i].status == VoteBehavior.reject) {
+                rejectCount++;
+            }
+        }
+        return rejectCount;
+    }
+
 
     // 所有用户的地址
     function getUserAddresses() public view returns (address[] memory) {
@@ -548,7 +704,7 @@ contract DonationAndVotingSystemContract {
     TODO: 每个donation的投票统计原本为人数，现需要改为票数(已完成)
     TODO: 每次投票前需要进行如下判定：若该用户还未进行投票，则approve/reject按钮均可用；
                                 若该用户已reject，则approve/reject按钮均不可用；
-                                若该用户已approve，则approve按钮可用，reject按钮不可用
+                                若该用户已approve，则approve按钮可用，reject按钮不可用(已间接完成，后端会进行判断并中断用户操作)
     */
 
 //    // 用户投票前的判定(针对每一个donation)，参数为当前用户的id

@@ -25,7 +25,9 @@ import {
     CloseSquareFilled,
     ApiFilled,
     EuroOutlined,
-    ExclamationCircleFilled
+    ExclamationCircleFilled,
+    ToTopOutlined,
+    ReloadOutlined
 } from '@ant-design/icons';
 
 import type { RangePickerProps } from "antd/es/date-picker";
@@ -150,6 +152,7 @@ const DonationAndVotingSystemContractPage = () => {
 
     // 自动获取用户的信息（余额，发起捐赠的id，投票信息）
     const getUserInfo = async () => {
+        // @ts-ignore
         if (DonationAndVotingSystemContract_Contract && GoldContract_Contract && AwardContract_Contract) {
             try {
                 const _userBalance = await GoldContract_Contract.methods.balanceOf(account).call({from: account})
@@ -172,6 +175,9 @@ const DonationAndVotingSystemContractPage = () => {
                 })
                 const _userGetAwardReward = await DonationAndVotingSystemContract_Contract.methods.getWhetherUserCanGetAwardReward(timeNow()).call({from: account})
                 const _userGetInitialGold = await GoldContract_Contract.methods.getWhetherUserCanGetInitialUserGold().call({from: account})
+
+
+
                 const _userInfo = {
                     balance: +_userBalance,
                     donationIds: __userDonationIds,
@@ -191,11 +197,14 @@ const DonationAndVotingSystemContractPage = () => {
     useEffect(() => {
         if (account !== '') {
             getUserInfo()
+            getApprovalDonationRankingListInfo()
+            getRejectedDonationRankingListInfo()
         }
     }, [account])
 
     // 自动读取所有用户的地址
     const getUserAddresses = async () => {
+        // @ts-ignore
         if (DonationAndVotingSystemContract_Contract) {
             try {
                 const _userAddresses = await DonationAndVotingSystemContract_Contract.methods.getUserAddresses().call({from: account})
@@ -210,18 +219,23 @@ const DonationAndVotingSystemContractPage = () => {
     useEffect(() => {
         if (account !== '') {
             getUserAddresses()
+            getApprovalDonationRankingListInfo()
+            getRejectedDonationRankingListInfo()
         }
     }, [account])
 
     // 自动获取所有捐赠的信息
     const getDonationInfo = async () => {
+        // @ts-ignore
         if (DonationAndVotingSystemContract_Contract) {
             try {
                 const _donationIds = await DonationAndVotingSystemContract_Contract.methods.getDonationIds().call({from: account})
                 const __donationsIds = _donationIds.map((item: string) => +item)
                 const _donationInfo = await Promise.all(__donationsIds.map(async (id: number) => {
                     try {
+                        // @ts-ignore
                         const _donationInformation = await DonationAndVotingSystemContract_Contract.methods.getDonationInformation(id, timeNow()).call({from: account})
+                        // @ts-ignore
                         const _donationVotesInformation = await DonationAndVotingSystemContract_Contract.methods.getDonationVotesInformation(id, timeNow()).call({from: account})
                         const __donationVotesInformation = _donationVotesInformation[0].map((item: number, index: number) => {
                             return {
@@ -230,6 +244,7 @@ const DonationAndVotingSystemContractPage = () => {
                                 voter: _donationVotesInformation[2][index] === 0 ? null : +_donationVotesInformation[2][index]
                             }
                         })
+                        // @ts-ignore
                         const _donationGetGoldReward = await DonationAndVotingSystemContract_Contract.methods.getWhetherUserCanGetGoldReward(id, timeNow()).call({from: account})
                         return {
                             id: id,
@@ -247,6 +262,8 @@ const DonationAndVotingSystemContractPage = () => {
                 }))
                 console.log("_donationInfo: ", _donationInfo)
                 setDonationsInfo(_donationInfo.reverse())
+                await getApprovalDonationRankingListInfo()
+                await getRejectedDonationRankingListInfo()
             } catch (error: any) {
                 revertOutput(error)
             }
@@ -257,11 +274,83 @@ const DonationAndVotingSystemContractPage = () => {
     useEffect(() => {
         if (account !== '') {
             getDonationInfo()
+            getApprovalDonationRankingListInfo()
+            getRejectedDonationRankingListInfo()
         }
     }, [account])
 
+    const getApprovalDonationRankingListInfo = async () => {
+        // @ts-ignore
+        if (DonationAndVotingSystemContract_Contract) {
+            try {
+                const result = await DonationAndVotingSystemContract_Contract.methods.getDonationRankingList(1).call({from: account, cacheBreaker: new Date().getTime()})
+                console.log("通过排行榜：", result)
+                const _approvedDonations = result[0];
+                const _approveVotes = result[1];
+                const _rejectVotes = result[2];
+
+                const __allApprovalDonationRankingList = _approvedDonations.map((item: any, index: number) => {
+                    return {
+                        id: +item.id,
+                        voteStartTime: getDate(item.voteStartTime),
+                        voteEndTime: getDate(item.voteEndTime),
+                        content: item.content,
+                        creator: <Tag icon={<UserOutlined />} color={item.creator === account ? "blue" : (colorGroup[userAddresses.indexOf(item.creator) % 10])}>{item.creator}</Tag>,
+                        votesInfo: `${_approveVotes[index]}/${_rejectVotes[index]}`,
+                        status: <Tag color="success">已通过</Tag>
+                    };
+                });
+
+                setAllApprovalDonationData(__allApprovalDonationRankingList);
+            } catch (error: any) {
+                revertOutput(error)
+            }
+        }
+    }
+    useEffect(() => {
+        if (account !== '') {
+            getApprovalDonationRankingListInfo()
+            getRejectedDonationRankingListInfo()
+        }
+    }, [account, donationsInfo, donationsInfo.length, userInfo]);
+
+    const getRejectedDonationRankingListInfo = async () => {
+        // @ts-ignore
+        if (DonationAndVotingSystemContract_Contract) {
+            try {
+                const result = await DonationAndVotingSystemContract_Contract.methods.getDonationRankingList(0).call({from: account, cacheBreaker: new Date().getTime()})
+                console.log("失败排行榜：", result)
+                const _rejectedDonations = result[0];
+                const _approveVotes = result[1];
+                const _rejectVotes = result[2];
+
+                const __allRejectedDonationRankingList = _rejectedDonations.map((item: any, index: number) => {
+                    return {
+                        id: +item.id,
+                        voteStartTime: getDate(item.voteStartTime),
+                        voteEndTime: getDate(item.voteEndTime),
+                        content: item.content,
+                        creator: <Tag icon={<UserOutlined />} color={item.creator === account ? "blue" : (colorGroup[userAddresses.indexOf(item.creator) % 10])}>{item.creator}</Tag>,
+                        votesInfo: `${_approveVotes[index]}/${_rejectVotes[index]}`,
+                        status: <Tag color="error">已拒绝</Tag>
+                    };
+                });
+
+                setAllRejectedDonationData(__allRejectedDonationRankingList);
+            } catch (error: any) {
+                revertOutput(error)
+            }
+        }
+    }
+    useEffect(() => {
+        if (account !== '') {
+            getRejectedDonationRankingListInfo()
+        }
+    }, [account, donationsInfo, donationsInfo.length, userInfo]);
+
     // 自动获取发布捐赠需要消耗的金币数量Gold
     const getGoldConsumedByDonation = async () => {
+        // @ts-ignore
         if (DonationAndVotingSystemContract_Contract) {
             try {
                 const _goldConsumedByDonation = await DonationAndVotingSystemContract_Contract.methods.getGoldConsumedByDonation().call({from: account})
@@ -281,6 +370,7 @@ const DonationAndVotingSystemContractPage = () => {
 
     // 自动获取投票所需要的金币数量Gold
     const getGoldConsumedByVote = async () => {
+        // @ts-ignore
         if (DonationAndVotingSystemContract_Contract) {
             try {
                 const _goldConsumedByVote = await DonationAndVotingSystemContract_Contract.methods.getGoldConsumedByVote().call({from: account})
@@ -300,6 +390,7 @@ const DonationAndVotingSystemContractPage = () => {
 
     // 自动获取最大投票次数
     const getMaxVotingTimes = async () => {
+        // @ts-ignore
         if (DonationAndVotingSystemContract_Contract) {
             try {
                 const _maxVotingTimes = await DonationAndVotingSystemContract_Contract.methods.getMaxVotingTimes().call({from: account})
@@ -319,6 +410,7 @@ const DonationAndVotingSystemContractPage = () => {
 
     // 自动获取金币Gold的数量
     const getInitialUserGold = async () => {
+        // @ts-ignore
         if (GoldContract_Contract) {
             try {
                 const _initialUserGold = await GoldContract_Contract.methods.getInitialUserGold().call({from: account})
@@ -343,6 +435,7 @@ const DonationAndVotingSystemContractPage = () => {
             setErrorMessage('你尚未连接钱包！')
             return
         }
+        // @ts-ignore
         if (GoldContract_Contract) {
             try {
                 await GoldContract_Contract.methods.getGold().send({
@@ -352,6 +445,8 @@ const DonationAndVotingSystemContractPage = () => {
                 })
                 getUserInfo()
                 getDonationInfo()
+                getApprovalDonationRankingListInfo()
+                getRejectedDonationRankingListInfo()
                 setSuccessMessage('成功兑换10000金币(Gold)。')
             } catch (error: any) {
                 revertOutput(error)
@@ -362,18 +457,21 @@ const DonationAndVotingSystemContractPage = () => {
         setGetGoldSubmittedLoading(false)
     }
 
-    // TODO: 手动将gold兑换为ETH
+    // TODO: 手动将gold兑换为ETH(已完成)
     const getETH = async () => {
         setGetETHSubmittedLoading(true)
         if (account === '') {
             setErrorMessage('你尚未连接钱包！')
             return
         }
+        // @ts-ignore
         if (GoldContract_Contract) {
             try {
                 await GoldContract_Contract.methods.getETH().send({from: account})
                 getUserInfo()
                 getDonationInfo()
+                getApprovalDonationRankingListInfo()
+                getRejectedDonationRankingListInfo()
                 setSuccessMessage('成功兑换为ETH。')
             } catch (error: any) {
                 revertOutput(error)
@@ -391,6 +489,7 @@ const DonationAndVotingSystemContractPage = () => {
             setErrorMessage('你尚未连接钱包！')
             return
         }
+        // @ts-ignore
         if (DonationAndVotingSystemContract_Contract && AwardContract_Contract) {
             try {
                 // setAwardButtonDisabled(true);  // 禁用按钮，防止重复点击
@@ -398,6 +497,8 @@ const DonationAndVotingSystemContractPage = () => {
                 // await new Promise(resolve => setTimeout(resolve, 500)); // 加入短暂延迟，确保链上状态更新
                 getUserInfo()
                 getDonationInfo()
+                getApprovalDonationRankingListInfo()
+                getRejectedDonationRankingListInfo()
                 setSuccessMessage('恭喜！你获得了纪念品！')
             } catch (error: any) {
                 revertOutput(error)
@@ -416,6 +517,7 @@ const DonationAndVotingSystemContractPage = () => {
             setErrorMessage('你尚未连接钱包！')
             return
         }
+        // @ts-ignore
         if (DonationAndVotingSystemContract_Contract && GoldContract_Contract) {
             try {
                 await DonationAndVotingSystemContract_Contract.methods.getGoldRewardFromDonationApproved(id).send({
@@ -424,6 +526,8 @@ const DonationAndVotingSystemContractPage = () => {
                 })
                 getUserInfo()
                 getDonationInfo()
+                getApprovalDonationRankingListInfo()
+                getRejectedDonationRankingListInfo()
                 setSuccessMessage('恭喜！你因为捐赠通过得到了金币Gold奖励！')
             } catch (error: any) {
                 revertOutput(error)
@@ -439,6 +543,7 @@ const DonationAndVotingSystemContractPage = () => {
             setErrorMessage('你尚未连接钱包！')
             return
         }
+        // @ts-ignore
         if (DonationAndVotingSystemContract_Contract && GoldContract_Contract) {
             // 前端判定用户是否到达了最大投票次数
             try {
@@ -446,6 +551,8 @@ const DonationAndVotingSystemContractPage = () => {
                 await DonationAndVotingSystemContract_Contract.methods.addNewDonation(content, startTime, endTime).send({from: account})
                 getUserInfo()
                 getDonationInfo()
+                getApprovalDonationRankingListInfo()
+                getRejectedDonationRankingListInfo()
                 setSuccessMessage('你成功发布了一项新的捐赠')
                 setSubmit(true)
                 _donationContent = ""
@@ -464,6 +571,7 @@ const DonationAndVotingSystemContractPage = () => {
             setErrorMessage('你尚未连接钱包！')
             return
         }
+        // @ts-ignore
         if (DonationAndVotingSystemContract_Contract && GoldContract_Contract) {
             try {
                 // 检查是否到达最大投票次数
@@ -495,6 +603,8 @@ const DonationAndVotingSystemContractPage = () => {
 
                 getUserInfo()
                 getDonationInfo()
+                getApprovalDonationRankingListInfo()
+                getRejectedDonationRankingListInfo()
                 if (behavior === 1) {
                     setSuccessMessage('你成功投出了赞成票。请记住，你共有' + maxVotingTimes + '次投票机会。')
                 } else {
@@ -510,6 +620,32 @@ const DonationAndVotingSystemContractPage = () => {
         }
     }
 
+    // 手动刷新排行榜
+    const reloadRankingList = async () => {
+        if (account === '') {
+            setErrorMessage('你尚未连接钱包！')
+            return
+        }
+        // @ts-ignore
+        if (DonationAndVotingSystemContract_Contract && GoldContract_Contract) {
+            try {
+                if (userInfo.balance >= 1) {
+                    await GoldContract_Contract.methods.reloadRankingList().send({from: account})
+                    getUserInfo()
+                    getDonationInfo()
+                    getApprovalDonationRankingListInfo()
+                    getRejectedDonationRankingListInfo()
+                } else {
+                    setErrorMessage('您的Gold余额不足(刷新排行榜需余额大于0)！')
+                }
+            } catch (error: any) {
+                revertOutput(error)
+            }
+        } else {
+            setErrorMessage('合约不存在！')
+        }
+    }
+
     // Ant Design相关内容
     const { Header, Content,  Footer, Sider } = Layout;
 
@@ -517,7 +653,8 @@ const DonationAndVotingSystemContractPage = () => {
     const [menuKey, setMenuKey] = useState(0);
     const _items = [
         { icon: ShopOutlined, label: "捐赠中心" },
-        { icon: UserOutlined, label: "用户中心" }
+        { icon: UserOutlined, label: "用户中心" },
+        { icon: ToTopOutlined, label: "排行榜" }
     ]
     const items: MenuProps['items'] = _items.map((value, index) => ({
         key: String(index),
@@ -538,6 +675,24 @@ const DonationAndVotingSystemContractPage = () => {
         votesInfo: string;
         status: JSX.Element;
         action: JSX.Element;
+    }[])
+    const [allApprovalDonationData, setAllApprovalDonationData] = useState([] as {
+        id: number;
+        voteStartTime: string;
+        voteEndTime: string;
+        content: string;
+        creator: JSX.Element;
+        votesInfo: string;
+        status: JSX.Element;
+    }[])
+    const [allRejectedDonationData, setAllRejectedDonationData] = useState([] as {
+        id: number;
+        voteStartTime: string;
+        voteEndTime: string;
+        content: string;
+        creator: JSX.Element;
+        votesInfo: string;
+        status: JSX.Element;
     }[])
     const [userDonationData, setUserDonationData] = useState([] as {
         id: number;
@@ -573,7 +728,7 @@ const DonationAndVotingSystemContractPage = () => {
                     if (item.status === 0) {
                         button_action =
                             <div>
-                                <Popconfirm title={"投票将消耗" + goldConsumedByVote + " Gold。你目前拥有" + userInfo.balance + " Gold。确定继续吗？！"} onConfirm={() => voteOnDonation(1, item.id)} okText="确定" cancelText="取消" placement="leftTop">
+                                <Popconfirm title={"投票将消耗" + goldConsumedByVote + " Gold。你目前拥有" + userInfo.balance + " Gold。确定继续吗？"} onConfirm={() => voteOnDonation(1, item.id)} okText="确定" cancelText="取消" placement="leftTop">
                                     <Button icon={<CheckSquareFilled />}>赞成</Button>
                                 </Popconfirm>
                                 <Popconfirm title={"投票将消耗" + goldConsumedByVote + " Gold。你目前拥有" + userInfo.balance + " Gold。确定继续吗？"} onConfirm={() => voteOnDonation(0, item.id)} okText="确定" cancelText="取消" placement="leftTop">
@@ -727,6 +882,9 @@ const DonationAndVotingSystemContractPage = () => {
             }
         }
     }, [userInfo.awardInfo])
+    useEffect(() => {
+
+    }, []);
 
     const columnsDonation: ColumnsType<{
         id: number;
@@ -786,6 +944,116 @@ const DonationAndVotingSystemContractPage = () => {
             title: '操作',
             dataIndex: 'action',
             key: 'action',
+            align: 'center' as 'center',
+        },
+    ];
+
+    const columnsApprovalDonation: ColumnsType<{
+        id: number;
+        voteStartTime: string;
+        voteEndTime: string;
+        content: string;
+        creator: JSX.Element;
+        votesInfo: string;
+        status: JSX.Element;
+    }> = [
+        {
+            title: '编号',
+            dataIndex: 'id',
+            key: 'id',
+            align: 'center' as 'center',
+        },
+        {
+            title: '开始时间',
+            dataIndex: 'voteStartTime',
+            key: 'voteStartTime',
+            align: 'center' as 'center',
+            sorter: (a, b) => Date.parse(a.voteStartTime) - Date.parse(b.voteStartTime),
+        },
+        {
+            title: '截止时间',
+            dataIndex: 'voteEndTime',
+            key: 'voteEndTime',
+            align: 'center' as 'center',
+            sorter: (a, b) => Date.parse(a.voteEndTime) - Date.parse(b.voteEndTime),
+        },
+        {
+            title: '捐赠内容',
+            dataIndex: 'content',
+            key: 'content',
+            align: 'center' as 'center',
+        },
+        {
+            title: '发起人',
+            dataIndex: 'creator',
+            key: 'creator',
+            align: 'center' as 'center',
+        },
+        {
+            title: '赞成数/反对数',
+            dataIndex: 'votesInfo',
+            key: 'votesInfo',
+            align: 'center' as 'center',
+        },
+        {
+            title: '捐赠状态',
+            dataIndex: 'status',
+            key: 'status',
+            align: 'center' as 'center',
+        },
+    ];
+
+    const columnsRejectedDonation: ColumnsType<{
+        id: number;
+        voteStartTime: string;
+        voteEndTime: string;
+        content: string;
+        creator: JSX.Element;
+        votesInfo: string;
+        status: JSX.Element;
+    }> = [
+        {
+            title: '编号',
+            dataIndex: 'id',
+            key: 'id',
+            align: 'center' as 'center',
+        },
+        {
+            title: '开始时间',
+            dataIndex: 'voteStartTime',
+            key: 'voteStartTime',
+            align: 'center' as 'center',
+            sorter: (a, b) => Date.parse(a.voteStartTime) - Date.parse(b.voteStartTime),
+        },
+        {
+            title: '截止时间',
+            dataIndex: 'voteEndTime',
+            key: 'voteEndTime',
+            align: 'center' as 'center',
+            sorter: (a, b) => Date.parse(a.voteEndTime) - Date.parse(b.voteEndTime),
+        },
+        {
+            title: '捐赠内容',
+            dataIndex: 'content',
+            key: 'content',
+            align: 'center' as 'center',
+        },
+        {
+            title: '发起人',
+            dataIndex: 'creator',
+            key: 'creator',
+            align: 'center' as 'center',
+        },
+        {
+            title: '赞成数/反对数',
+            dataIndex: 'votesInfo',
+            key: 'votesInfo',
+            align: 'center' as 'center',
+        },
+        {
+            title: '捐赠状态',
+            dataIndex: 'status',
+            key: 'status',
             align: 'center' as 'center',
         },
     ];
@@ -935,12 +1203,53 @@ const DonationAndVotingSystemContractPage = () => {
         if (allDonationData.length === 0) {
             return <Empty />
         } else {
-            return <Table dataSource={allDonationData} columns={columnsDonation} pagination={{
-                hideOnSinglePage: true, // 只有一页时不显示分页
-                pageSize: 5,
-                showTotal: () => `共 ${allDonationData.length} 条`,
-                total: allDonationData.length,
-            }} />
+            return (
+                <div>
+                    <Table dataSource={allDonationData} columns={columnsDonation} pagination={{
+                        hideOnSinglePage: true, // 只有一页时不显示分页
+                        pageSize: 5,
+                        showTotal: () => `共 ${allDonationData.length} 条`,
+                        total: allDonationData.length,
+                    }} />
+                </div>
+
+            )
+        }
+    }
+
+    const AllApprovalDonationTable = () => {
+        if (allApprovalDonationData.length === 0) {
+            return <Empty />
+        } else {
+            return (
+                <div>
+                    <Table dataSource={allApprovalDonationData} columns={columnsApprovalDonation} pagination={{
+                        hideOnSinglePage: true,
+                        pageSize: 5,
+                        showTotal: () => `共 ${allApprovalDonationData.length} 条`,
+                        total: allApprovalDonationData.length,
+                    }}>
+                    </Table>
+                </div>
+            )
+        }
+    }
+
+    const AllRejectedDonationTable = () => {
+        if (allRejectedDonationData.length === 0) {
+            return <Empty />
+        } else {
+            return (
+                <div>
+                    <Table dataSource={allRejectedDonationData} columns={columnsRejectedDonation} pagination={{
+                        hideOnSinglePage: true,
+                        pageSize: 5,
+                        showTotal: () => `共 ${allRejectedDonationData.length} 条`,
+                        total: allRejectedDonationData.length,
+                    }}>
+                    </Table>
+                </div>
+            )
         }
     }
 
@@ -1020,6 +1329,8 @@ const DonationAndVotingSystemContractPage = () => {
     const handleOk = async () => {
         setDonationSubmittedLoading(true)
         await addNewDonation(_donationContent, _startTime, _endTime)
+        await getApprovalDonationRankingListInfo()
+        await getRejectedDonationRankingListInfo()
         setDonationSubmittedLoading(false)
     }
 
@@ -1028,6 +1339,8 @@ const DonationAndVotingSystemContractPage = () => {
         setSubmit(false)
         getUserInfo()
         getDonationInfo()
+        getApprovalDonationRankingListInfo()
+        getRejectedDonationRankingListInfo()
     }
 
     const onOk = (value: RangePickerProps['value']) => {
@@ -1113,7 +1426,7 @@ const DonationAndVotingSystemContractPage = () => {
                     <Divider />
                     <AllDonationTable />
                 </Content>
-                <Footer style={{ textAlign: 'center' }}>Ant Design ©2024 Created by Ant UED</Footer>
+                <Footer style={{ textAlign: 'center' }}>Donation & Voting System Created by Group 2 in NUS EE4032</Footer>
             </Layout>
         )
     }
@@ -1145,6 +1458,8 @@ const DonationAndVotingSystemContractPage = () => {
         setOpen_(false)
         getUserInfo()
         getDonationInfo()
+        getApprovalDonationRankingListInfo()
+        getRejectedDonationRankingListInfo()
     }
 
 
@@ -1222,7 +1537,37 @@ const DonationAndVotingSystemContractPage = () => {
                     </Modal>
 
                 </Content>
-                <Footer style={{ textAlign: 'center' }}>Ant Design ©2024 Created by Ant UED</Footer>
+                <Footer style={{ textAlign: 'center' }}>Donation & Voting System Created by Group 2 in NUS EE4032</Footer>
+            </Layout>
+        )
+    }
+
+    // 排行榜的HTML
+    const RankingList = () => {
+        return (
+            <Layout className="site-layout" style={{ marginLeft: 200, minHeight: 900 }}>
+                {errorMessage !== "" && <Alert type="error" message={errorMessage} banner closable afterClose={() => setErrorMessage("")} />}
+                {successMessage !== "" && <Alert type="success" message={successMessage} banner closable afterClose={() => setSuccessMessage("")} />}
+                <Header className="header">
+                    <br />
+                    <Row justify="space-around" align="middle">
+                        <Col span={6}><FileTextOutlined /><br />你一共提交了{(account === "" || !userInfo.donationIds) ? 0 : userInfo.donationIds.length}项捐赠</Col>
+                        <Col span={6}><HighlightOutlined /><br />你一共参与了{(account === "" || !userInfo.votesInfo) ? 0 : userInfo.votesInfo.length}次投票</Col>
+                        <Col span={6}><GiftOutlined /><br />你拥有{(account === "" || !userInfo.awardInfo) ? 0 : userInfo.awardInfo.length}个纪念品</Col>
+                        <Col span={6}><DollarCircleOutlined /><br/>你拥有{(account === "" ? 0 : userInfo.balance)} Gold</Col>
+                    </Row>
+                </Header>
+                <Content style={{ margin: '16px', marginTop: '0px', padding: '16px', backgroundColor: 'white', overflow: 'initial' }}>
+                    <Tabs
+                        defaultActiveKey="1"
+                        centered
+                        items={[
+                            {label: (<span><FileTextOutlined />通过的捐赠排行榜<Button size="small" type="text" onClick={reloadRankingList}><ReloadOutlined /></Button></span>), key: '1', children: <AllApprovalDonationTable />},
+                            {label: (<span><HighlightOutlined />失败的捐赠排行榜<Button size="small" type="text" onClick={reloadRankingList}><ReloadOutlined /></Button></span>), key: '2', children: <AllRejectedDonationTable />},
+                        ]}
+                    />
+                </Content>
+                <Footer style={{ textAlign: 'center' }}>Donation & Voting System Created by Group 2 in NUS EE4032</Footer>
             </Layout>
         )
     }
@@ -1247,7 +1592,7 @@ const DonationAndVotingSystemContractPage = () => {
             </Sider>
             {/* 注意下面的导航栏切换部分，需要使用两个=来判断menuKey的值，而不是三个 */}
             {/*{menuKey === 0 ? <DonationCenter /> : (menuKey === 1 ? <UserCenter /> : menuKey)}*/}
-            {menuKey == 0 ? <DonationCenter /> : (menuKey == 1 ? <UserCenter /> : menuKey)}
+            {menuKey == 0 ? <DonationCenter /> : (menuKey == 1 ? <UserCenter /> : <RankingList />)}
         </Layout>
     )
 

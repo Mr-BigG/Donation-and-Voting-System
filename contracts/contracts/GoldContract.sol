@@ -51,4 +51,10 @@ contract GoldContract is ERC20 {
         payable(msg.sender).transfer(ethAmount);
 
     }
+
+    // 扣除1gold刷新排行榜，抵消排行榜的数据异步加载BUG
+    function reloadRankingList() public payable {
+        // 扣除用户1个gold
+        _burn(msg.sender, 1);
+    }
 }

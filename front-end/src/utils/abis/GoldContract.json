@@ -305,6 +305,13 @@
     },
     {
       "inputs": [],
+      "name": "reloadRankingList",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "symbol",
       "outputs": [
         {
