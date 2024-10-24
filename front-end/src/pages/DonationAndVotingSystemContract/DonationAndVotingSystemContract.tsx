@@ -478,7 +478,7 @@ const DonationAndVotingSystemContractPage = () => {
                 const canVote2 = await DonationAndVotingSystemContract_Contract.methods.checkVotingConditions(id, behavior).call({from: account})
                 console.log("canVote2: ", canVote2)
                 if (canVote2 === false) {
-                    setErrorMessage('您的投票不合法！您的投票必须和之前的投票一致！')
+                    setErrorMessage('您的投票不合法！您的投票必须和之前的投票一致！且每个捐赠只能拒绝一次！')
                     return
                 }
 

@@ -391,6 +391,11 @@ contract DonationAndVotingSystemContract {
 
         // 如果不是第一次投票，检查历史投票
         for (uint i = 0; i < userVotes.length; i++) {
+            // 接口已由GSJ写好，只需把下面的注释取消即可在后端实现检测reject only once in per donation
+//            if (behavior == VoteBehavior.reject && userVotes.length == 1 && userVotes[i].status == VoteBehavior.reject) {
+//                // 如果是reject 投票，且之前投过一次拒绝票，不能再次reject
+//                return false;
+//            }
             if (behavior == VoteBehavior.approve && userVotes[i].status == VoteBehavior.reject) {
                 // 如果是 approve 投票，且之前有 reject，不能投 approve
                 return false;

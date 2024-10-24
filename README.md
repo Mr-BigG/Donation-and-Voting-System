@@ -42,15 +42,21 @@
 * 完善投票的相关功能，现在已确保用户在选择approve后，只能继续approve；或选择reject后，无法再approve。仅剩的需求为：设置每个donation只可以reject一次
 * 为部分按钮添加“加载中”状态，
 * 修改部分前端组件的样式、布局和颜色
-
+## 2024.10.24 12:40 Guo Shaojie 更新说明：已替CJY完成reject only once in per donation（后端部分），该功能已满足项目需求，也可以继续优化
 
 
 ## 待完成功能
-* 限制每位用户对每个donation的rejected vote数量为1次 ★★★★ CJY
+* 限制每位用户对每个donation的rejected vote数量为1次 ★★★★ CJY (后端接口已由GSJ完成，取消注释后端相关代码即可实现)
 * 设置一个合适的函数，使得用户对每个donation的每次approval vote的价格逐次递增 ★★★★★ LJY
 * 添加gold => ETH的功能 ★★★★★ LJY / GSJ （此功能已由GSJ完成，部署最新版项目即可查看）
 * 平台的抽成（后续如果部署在以太坊主网，可以用来盈利） ★★ GSJ
-* 更改前端各个组件的样式、布局、颜色等 ★★★ GSJ
+* 更改前端各个组件的样式、布局、颜色等 ★★★ GSJ （部分完成）
+
+## 可优化功能(optional)
+* 若使用未安装metamask的浏览器访问项目，页面会空白，因为代码没有检测到metamask会报错，应该添加一些类似404的页面
+* 增加ranking list页面，显示目前所有donation的排名
+* 增加一个好看的首页，美化项目
+* 将未通过的donation的gold没收，并发送到合约创建者的账户 （另一种盈利方式）
 
 ## 提示
 * 建议使用Remix编写后端，使用IntellIJ编写前端，因为IntellIJ比VS Code方便太多了
