@@ -45,10 +45,11 @@
 ## 2024.10.24 12:40 Guo Shaojie 更新说明：已替CJY完成reject only once in per donation（后端部分），该功能已满足项目需求，也可以继续优化
 ## 2024.10.24 19:50 Guo Shaojie 更新说明：添加Ranking List的功能模块，已知BUG为：排行榜的更新依赖于与区块链的交互操作，也就是必须进行和区块链交互的操作才能更新排行榜，否则刷新页面不会更新(现已通过排行榜的手动刷新按钮修复)
 ## 2024.10.24 20:40 Guo Shaojie 更新说明：修复最大投票次数的BUG
+## 2024.10.27 03:00 Guo Shaojie 更新说明：已实现用户对每个donation的每次approval vote的价格逐次递增，函数为 price = 100 * 2 ^ (n - 1) 其中n为投票次数
 
 ## 待完成功能(core)
-* 限制每位用户对每个donation的rejected vote数量为1次 ★★★★ CJY (后端接口已由GSJ完成，取消注释后端相关代码即可实现)
-* 设置一个合适的函数，使得用户对每个donation的每次approval vote的价格逐次递增 ★★★★★ LJY
+* 限制每位用户对每个donation的rejected vote数量为1次 ★★★★ CJY (此功能已由GSJ完成)
+* 设置一个合适的函数，使得用户对每个donation的每次approval vote的价格逐次递增 ★★★★★ LJY (此功能已由GSJ完成)
 * 添加gold => ETH的功能 ★★★★★ LJY / GSJ （此功能已由GSJ完成，部署最新版项目即可查看）
 * 平台的抽成（后续如果部署在以太坊主网，可以用来盈利） ★★ GSJ
 * 更改前端各个组件的样式、布局、颜色等 ★★★ GSJ （部分完成）

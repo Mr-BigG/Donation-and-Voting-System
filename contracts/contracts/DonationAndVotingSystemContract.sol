@@ -395,10 +395,10 @@ contract DonationAndVotingSystemContract {
         // 如果不是第一次投票，检查历史投票
         for (uint i = 0; i < userVotes.length; i++) {
             // 接口已由GSJ写好，只需把下面的注释取消即可在后端实现检测reject only once in per donation
-//            if (behavior == VoteBehavior.reject && userVotes.length == 1 && userVotes[i].status == VoteBehavior.reject) {
-//                // 如果是reject 投票，且之前投过一次拒绝票，不能再次reject
-//                return false;
-//            }
+            if (behavior == VoteBehavior.reject && userVotes.length == 1 && userVotes[i].status == VoteBehavior.reject) {
+                // 如果是reject 投票，且之前投过一次拒绝票，不能再次reject
+                return false;
+            }
             if (behavior == VoteBehavior.approve && userVotes[i].status == VoteBehavior.reject) {
                 // 如果是 approve 投票，且之前有 reject，不能投 approve
                 return false;
@@ -436,15 +436,20 @@ contract DonationAndVotingSystemContract {
 //            require(false, "You have reached the max voting times");
 //        }
 
+        // 获取用户对当前捐赠的投票次数
+        uint currentVoteCount = _userVotes[msg.sender][id].length;
+        // 计算当前投票需要消耗的金币数量，第一次为100，之后每次翻倍
+        uint goldCost = 100 * (2 ** currentVoteCount);
+
         // 余额不足，无法投票 => \u4f59\u989d\u4e0d\u8db3\uff0c\u65e0\u6cd5\u6295\u7968
-        require(gold.balanceOf(msg.sender) >= _votes.goldConsumedByVote, "\u4f59\u989d\u4e0d\u8db3\uff0c\u65e0\u6cd5\u6295\u7968");
+        require(gold.balanceOf(msg.sender) >= goldCost, "\u4f59\u989d\u4e0d\u8db3\uff0c\u65e0\u6cd5\u6295\u7968");
         // 系统对你的金币没有权限。请授权。 => \u7cfb\u7edf\u5bf9\u4f60\u7684\u91d1\u5e01\u6ca1\u6709\u6743\u9650\u3002\u8bf7\u6388\u6743\u3002
-        require(gold.allowance(msg.sender, address(this)) >= _votes.goldConsumedByVote, "\u7cfb\u7edf\u5bf9\u4f60\u7684\u91d1\u5e01\u6ca1\u6709\u6743\u9650\u3002\u8bf7\u6388\u6743\u3002");
+        require(gold.allowance(msg.sender, address(this)) >= goldCost, "\u7cfb\u7edf\u5bf9\u4f60\u7684\u91d1\u5e01\u6ca1\u6709\u6743\u9650\u3002\u8bf7\u6388\u6743\u3002");
 
         // TODO: 对新的投票进行判定，若为初次投票，则可以进行投票；若已拒绝，则不可再投任何票；若已同意，则不可再拒绝(已完成)
 
 
-        gold.transferFrom(msg.sender, address(this), _votes.goldConsumedByVote); // 委托本合约把用户的金币gold转账给本合约（需要前端提前委托）
+        gold.transferFrom(msg.sender, address(this), goldCost); // 委托本合约把用户的金币gold转账给本合约（需要前端提前委托）
 
         Vote memory newVote = Vote({
             status: VoteBehavior(userVote), // 投票状态
@@ -530,7 +535,7 @@ contract DonationAndVotingSystemContract {
             return (status, voteTime, voter);
         }
     }
-    
+
     // TODO: 实现donation的排行榜(已完成)
     function getDonationRankingList(uint flag) public view returns (Donation[] memory, uint[] memory, uint[] memory) {
         // flag为1，获取通过的donation的排行榜；flag为0，获取失败的donation的排行榜
@@ -658,7 +663,7 @@ contract DonationAndVotingSystemContract {
             return (rejectedDonations, approveVotes, rejectVotes);
         }
     }
-    
+
     // 获取赞成票数
     function getApproveVoteCount(uint donationId) internal view returns (uint) {
         Vote[] memory votes = _votes.getVoteWithAddressAndId[donationId];
@@ -694,28 +699,14 @@ contract DonationAndVotingSystemContract {
         return _votes.maxVotingTimes;
     }
 
-    // 投票需要消耗的金币数量gold
+    // 初次投票需要消耗的金币数量gold
     function getGoldConsumedByVote() public view returns (uint) {
         return _votes.goldConsumedByVote;
     }
 
-
-    /*
-    TODO: 每个donation的投票统计原本为人数，现需要改为票数(已完成)
-    TODO: 每次投票前需要进行如下判定：若该用户还未进行投票，则approve/reject按钮均可用；
-                                若该用户已reject，则approve/reject按钮均不可用；
-                                若该用户已approve，则approve按钮可用，reject按钮不可用(已间接完成，后端会进行判断并中断用户操作)
-    */
-
-//    // 用户投票前的判定(针对每一个donation)，参数为当前用户的id
-//    function checkWhetherUserHasAlreadyVotedOnPerDonation(uint id) public view returns (bool) {
-//        // 首先获取用户的投票列表
-//
-//    }
+    // 多次投票需要消耗的金币数量gold（动态）
+    function updateGetGoldConsumedByVote(uint donationId) public view returns (uint) {
+        uint voteCount = _userVotes[msg.sender][donationId].length;
+        return 100 * (2 ** voteCount);
+    }
 }
-
-
-
-
-
-
