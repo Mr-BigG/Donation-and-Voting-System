@@ -6,7 +6,7 @@ import AwardContract from './abis/AwardContract.json'
 
 const Web3 = require('web3');
 
-// 创建web3实例
+// 创建web3实例 / Create a web3 instance
 // @ts-ignore
 let web3;
 let isMetaMaskAvailable = false;
@@ -17,15 +17,15 @@ if (typeof window !== "undefined") {
         // @ts-ignore
         web3 = new Web3(window.ethereum);
         isMetaMaskAvailable = true;
-        console.log("MetaMask 已连接");
+        console.log("MetaMask is connected");
         // @ts-ignore
     } else if (window.web3) {
         // @ts-ignore
         web3 = new Web3(window.web3.currentProvider);
         isMetaMaskAvailable = true;
-        console.warn("使用了旧版的 MetaMask provider");
+        console.warn("An older version of the MetaMask provider is used");
     } else {
-        console.error('没有检测到 MetaMask，请安装 MetaMask 扩展程序');
+        console.error('No MetaMask detected. Please install the MetaMask extension');
     }
 }
 
@@ -34,8 +34,8 @@ if (!isMetaMaskAvailable) {
 
 }
 
-// 修改地址为部署的合约地址
-// ABI文件为合约编译后自动生成
+// 修改地址为部署的合约地址 / Change the address to the deployed contract address
+// ABI文件为合约编译后自动生成 / The ABI file is automatically generated after the contract is compiled
 const DonationAndVotingSystemContractAddress = Addresses.DonationAndVotingSystemContract
 const DonationAndVotingSystemContractABI = DonationAndVotingSystemContract.abi;
 const GoldContractAddress = Addresses.GoldContract;
@@ -48,7 +48,7 @@ let GoldContract_Contract;
 let AwardContract_Contract;
 
 if (isMetaMaskAvailable) {
-    // 获取合约实例
+    // 获取合约实例 / Get contract instance
     DonationAndVotingSystemContract_Contract = new web3.eth.Contract(DonationAndVotingSystemContractABI, DonationAndVotingSystemContractAddress);
     GoldContract_Contract = new web3.eth.Contract(GoldContractABI, GoldContractAddress);
     AwardContract_Contract = new web3.eth.Contract(AwardContractABI, AwardContractAddress);

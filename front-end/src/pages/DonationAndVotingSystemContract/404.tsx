@@ -7,12 +7,12 @@ const Error404Page = () => {
         <div className="Error404">
             <Result
                 status="warning"
-                title="未检测到 MetaMask"
-                subTitle="请先安装 MetaMask 扩展程序以继续使用本应用。MetaMask 是一个浏览器扩展，可用于访问以太坊区块链。"
+                title="No MetaMask detected"
+                subTitle="Please install the MetaMask extension first to continue using the application. MetaMask is a browser extension that can be used to access the Ethereum blockchain."
                 extra={[
                     <Button type="primary" key="install">
                         <a href="https://metamask.io/download.html" target="_blank" rel="noopener noreferrer">
-                            安装 MetaMask
+                            Install MetaMask Now
                         </a>
                     </Button>
                 ]}

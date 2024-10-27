@@ -1,5 +1,5 @@
 {
-  "name": "voting_system",
+  "name": "donation_and_voting_system",
   "version": "1.0.1",
   "description": "Voting System based on the Solidity and React",
   "main": "index.js",

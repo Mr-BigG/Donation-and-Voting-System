@@ -4,58 +4,56 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-// 合约：奖励合约
+// 合约：奖励合约 / Contract: AwardContract
 contract AwardContract is ERC721URIStorage {
 
     using Counters for Counters.Counter;
-    Counters.Counter private _tokenIds; // NFT计数器
+    Counters.Counter private _tokenIds; // NFT计数器 / NFT Counter
 
-    address manager; // 管理员，即VotingSystemContract合约
+    address manager; // 管理员，即DonationAndVotingSystemContract合约 / Admin, which is DonationAndVotingSystemContract
 
-    // 纪念品(奖励)的结构structure
+    // 纪念品(奖励)的结构structure / The structure of souvenir(AKA. Award)
     struct Award {
-        uint itemId; // 奖励的id
-        string tokenURI; // 奖励的URI
-        uint awardTime; // 获得奖励的时间
+        uint itemId; // 奖励的id / Id of award
+        string tokenURI; // 奖励的URI / URI of award
+        uint awardTime; // 获得奖励的时间 / Awarding time
     }
 
-    // 所有纪念品(奖励)的结构structure
+    // 所有纪念品(奖励)的结构structure / The structure of all awards
     struct Awards {
-        mapping(address => Award[]) getAwardWithAddress; // 由地址获取所拥有的奖励，映射关系
+        mapping(address => Award[]) getAwardWithAddress; // 由地址获取所拥有的奖励，映射关系 / Get the reward owned by the address, mapping relationship
     }
 
     Awards private _awards;
-    mapping(string => mapping(address => bool)) claimedGetAwardsUserList; // 已经获得指定TokenURI奖励的用户名单
+    mapping(string => mapping(address => bool)) claimedGetAwardsUserList; // 已经获得指定TokenURI奖励的用户名单 / List of users who have received a reward from the specified TokenURI
 
-    // 初始化
+    // 初始化 / Initialize
     constructor(string memory name, string memory symbol) ERC721(name, symbol) {
         manager = msg.sender; // VotingSystemContract合约管理员
     }
 
-    // 给某个用户发放纪念品（奖励）
+    // 给某个用户发放纪念品（奖励） / Send a souvenir (reward) to a user
     function awardItem(address user, string memory tokenURI) public {
-        // Solidity需要将中文进行unicode转码
-        // 只有系统可以访问此函数(awardTime) => \u53ea\u6709\u7cfb\u7edf\u53ef\u4ee5\u8bbf\u95ee\u6b64\u51fd\u6570(awardTime)
-        require(msg.sender == manager, "\u53ea\u6709\u7cfb\u7edf\u53ef\u4ee5\u8bbf\u95ee\u6b64\u51fd\u6570(awardTime)");
-        // 您已获得此奖励 => \u60a8\u5df2\u83b7\u5f97\u6b64\u5956\u52b1
-        require(claimedGetAwardsUserList[tokenURI][msg.sender] == false, "\u60a8\u5df2\u83b7\u5f97\u6b64\u5956\u52b1");
+        // Solidity需要将中文进行unicode转码 / Solidity requires unicode transcoding of Chinese
+        require(msg.sender == manager, "Only the system can access this function (awardTime)");
+        require(claimedGetAwardsUserList[tokenURI][msg.sender] == false, "You have received this reward");
 
-        // 将该用户设定为已获取纪念品(奖励)
+        // 将该用户设定为已获取纪念品(奖励) / Set the user as having earned a souvenir (reward)
         claimedGetAwardsUserList[tokenURI][user] = true;
 
-        // 由计数器获取现在的id值
+        // 由计数器获取现在的id值 / Gets the current id value by the counter
         uint256 newItemId = _tokenIds.current();
 
-        // 给对应的地址发送对应的NFT
+        // 给对应的地址发送对应的NFT / Sends the corresponding NFT to the corresponding address
         _mint(user, newItemId);
 
-        // 匹配URI和id的关系
+        // 匹配URI和id的关系 / Matches the relationship between URI and id
         _setTokenURI(newItemId, tokenURI);
 
-        // 计数器增加，准备下一次发放NFT
+        // 计数器增加，准备下一次发放NFT / The counter is increased, ready for the next NFT issuance
         _tokenIds.increment();
 
-        // 将新的纪念品记录下来
+        // 将新的纪念品记录下来 / Keep a record of new mementos
         Award memory newAward = Award({
             itemId: newItemId,
             tokenURI: tokenURI,
@@ -64,7 +62,7 @@ contract AwardContract is ERC721URIStorage {
         _awards.getAwardWithAddress[user].push(newAward);
     }
 
-    // 用户的所有award信息
+    // 用户的所有award信息 / All award information of the user
     function getAwardInformation(address user) public view returns (uint[] memory, string[] memory, uint[] memory) {
         uint i;
         Award[] memory userAwards = _awards.getAwardWithAddress[user];
@@ -79,7 +77,7 @@ contract AwardContract is ERC721URIStorage {
         return (itemId, tokenURI, awardTime);
     }
 
-    // 用户是否可以获取某种Token_URI的award
+    // 用户是否可以获取某种Token_URI的award / Whether the user can obtain an award for a Token_URI
     function getWhetherUserCanGetAwardReward(address user, string memory tokenURI) public view returns (bool) {
         return !claimedGetAwardsUserList[tokenURI][user];
     }

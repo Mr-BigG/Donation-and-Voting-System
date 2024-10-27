@@ -56,17 +56,18 @@ import {
 import format from 'date-fns/format';
 import Icon from "antd/lib/icon";
 import assert from "assert";
+import {useNavigate} from "react-router-dom";
 
 const GanacheTestChainID = '0x539'
 const GanacheTestChainName = 'Ganache Test Chain'
 const GanacheTestChainRpcUrl = 'http://127.0.0.1:8545'
 
-// 获取当前时间戳
+// 获取当前时间戳 / Gets the current timestamp
 const timeNow = () => {
     return Date.parse(new Date().toString()) / 1000
 }
 
-// 由时间戳得到时间字符串
+// 由时间戳得到时间字符串 / Get the time string from the time stamp
 const getDate = (stamp:number) => {
     let date = new Date(1000 * stamp);
     let formattedTime = format(date, 'yyyy-MM-dd HH:mm:ss')
@@ -74,15 +75,15 @@ const getDate = (stamp:number) => {
 }
 
 const DonationAndVotingSystemContractPage = () => {
-    // MetaMask相关的内容
+    // MetaMask相关的内容 / MetaMask related content
     const [account, setAccount] = useState('')
-    // 自动检查用户是否已经连接钱包
-    // 查看window对象里是否存在Ethereum（MetaMask安装后注入的）对象
+    // 自动检查用户是否已经连接钱包 / Automatically checks if the user is connected to the wallet
+    // 查看window对象里是否存在Ethereum（MetaMask安装后注入的）对象 / Check the window object for Ethereum (injected after MetaMask installation) objects
     const initCheckAccounts = async () => {
         // @ts-ignore
         const { ethereum } = window;
         if (Boolean(ethereum && ethereum.isMetaMask)) {
-            // 尝试获取连接到用户账户
+            // 尝试获取连接到用户账户 / Try to get a connection to the user account
             // @ts-ignore
             const accounts = await web3.eth.getAccounts()
             if (accounts && accounts.length) {
@@ -93,18 +94,18 @@ const DonationAndVotingSystemContractPage = () => {
     useEffect(() => {
         initCheckAccounts()
     }, [])
-    // 手动连接钱包
+    // 手动连接钱包 / Manually connect wallet
     const onClickConnectWallet = async () => {
-        // 查看window对象里是否存在ethereum（MetaMask安装后注入的）对象
+        // 查看window对象里是否存在ethereum（MetaMask安装后注入的）对象 / Check the window object for ethereum (injected after MetaMask installation) objects
         // @ts-ignore
         const { ethereum } = window;
         if (!Boolean(ethereum && ethereum.isMetaMask)) {
-            setErrorMessage('MetaMask钱包未安装！')
+            setErrorMessage('MetaMask wallet not installed!')
             return
         }
 
         try {
-            // 如果当前MetaMask不在本地链上，切换MetaMask到本地测试链
+            // 如果当前MetaMask不在本地链上，切换MetaMask到本地测试链 / If the current MetaMask is not on the local chain, switch MetaMask to the local test chain
             if (ethereum.chainId !== GanacheTestChainID) {
                 const chain = {
                     chainId: GanacheTestChainID,
@@ -113,44 +114,44 @@ const DonationAndVotingSystemContractPage = () => {
                 };
 
                 try {
-                    // 尝试切换到本地网络
+                    // 尝试切换到本地网络 / Attempt to switch to the local network
                     await ethereum.request({method: "wallet_switchEthereumChain", params: [{chainId: chain.chainId}]})
                 } catch (switchError: any) {
-                    // 如果本地网络没有添加到MetaMask中，添加该网络
+                    // 如果本地网络没有添加到MetaMask中，添加该网络 / If the local network is not added to the MetaMask, add it
                     if (switchError.code === 4902) {
                         await ethereum.request({method: "wallet_addEthereumChain", params: [chain]});
                     }
                 }
             }
 
-            // MetaMask成功切换了网络，然后让MetaMask请求用户的授权
+            // MetaMask成功切换了网络，然后让MetaMask请求用户的授权 / MetaMask successfully switches the network and then asks MetaMask to request authorization from the user
             await ethereum.request({method: "eth_requestAccounts"});
-            // 获取MetaMask拿到的授权用户列表
+            // 获取MetaMask拿到的授权用户列表 / Get a list of authorized users obtained by MetaMask
             const accounts = await ethereum.request({method: "eth_accounts"});
-            // 如果用户存在，展示用户的account地址，否则显示错误信息
-            setAccount(accounts[0] || '无法获取账户');
+            // 如果用户存在，展示用户的account地址，否则显示错误信息 / If the user exists, the account address of the user is displayed. Otherwise, an error message is displayed
+            setAccount(accounts[0] || 'Unable to access account');
         } catch (error: any) {
             setErrorMessage(error.message)
         }
     }
 
-    // 调用智能合约相关内容
-    // 用户信息
+    // 调用智能合约相关内容 / Call smart contract related content
+    // 用户信息 / User info
     const [userInfo, setUserInfo] = useState({} as {balance: number, donationIds: number[], votesInfo: {behavior: number, voteTime: number, donationIdVotedOn: number}[], awardInfo: {id: number, URI: string, awardTime: number}[], getAwardReward: boolean, getInitialGold: boolean})
-    // 捐赠信息
+    // 捐赠信息 / Donation info
     const [donationsInfo, setDonationsInfo] = useState([] as {id: number, content: string, creator: string, voteStartTime: number, voteEndTime: number, status: number, votesInfo: {behavior: number, voteTime: number, voter: string}[], getGoldReward: boolean}[])
-    // 发布捐赠需要消耗的金币Gold
+    // 发布捐赠需要消耗的金币Gold / Publish the Gold coins that need to be spent for donation
     const [goldConsumedByDonation, setGoldConsumedByDonation] = useState(0)
-    // 投票需要消耗的金币Gold
+    // 投票需要消耗的金币Gold / Voting costs Gold coins
     const [goldConsumedByVote, setGoldConsumedByVote] = useState(0)
-    // 最大投票次数
+    // 最大投票次数 / Maximum number of votes
     const [maxVotingTimes, setMaxVotingTimes] = useState(0)
-    // 领取金币Gold的数量
+    // 领取金币Gold的数量 / The amount of Gold coins to claim
     const [initialUserGold, setInitialUserGold] = useState(0)
-    // 所有用户地址
+    // 所有用户地址 / All user addresses
     const [userAddresses, setUserAddresses] = useState([] as string[])
 
-    // 自动获取用户的信息（余额，发起捐赠的id，投票信息）
+    // 自动获取用户的信息（余额，发起捐赠的id，投票信息） / Automatic access to user information (balance, id to initiate donation, voting information)
     const getUserInfo = async () => {
         // @ts-ignore
         if (DonationAndVotingSystemContract_Contract && GoldContract_Contract && AwardContract_Contract) {
@@ -191,7 +192,7 @@ const DonationAndVotingSystemContractPage = () => {
                 revertOutput(error)
             }
         } else {
-            setErrorMessage('合约不存在！')
+            setErrorMessage('The contract does not exist!')
         }
     }
     useEffect(() => {
@@ -202,7 +203,7 @@ const DonationAndVotingSystemContractPage = () => {
         }
     }, [account])
 
-    // 自动读取所有用户的地址
+    // 自动读取所有用户的地址 / Automatically read the addresses of all users
     const getUserAddresses = async () => {
         // @ts-ignore
         if (DonationAndVotingSystemContract_Contract) {
@@ -213,7 +214,7 @@ const DonationAndVotingSystemContractPage = () => {
                 revertOutput(error)
             }
         } else {
-            setErrorMessage('合约不存在！')
+            setErrorMessage('The contract does not exist!')
         }
     }
     useEffect(() => {
@@ -224,7 +225,7 @@ const DonationAndVotingSystemContractPage = () => {
         }
     }, [account])
 
-    // 自动获取所有捐赠的信息
+    // 自动获取所有捐赠的信息 / Automatically get information on all donations
     const getDonationInfo = async () => {
         // @ts-ignore
         if (DonationAndVotingSystemContract_Contract) {
@@ -268,7 +269,7 @@ const DonationAndVotingSystemContractPage = () => {
                 revertOutput(error)
             }
         } else {
-            setErrorMessage('合约不存在！')
+            setErrorMessage('The contract does not exist!')
         }
     }
     useEffect(() => {
@@ -297,7 +298,7 @@ const DonationAndVotingSystemContractPage = () => {
                         content: item.content,
                         creator: <Tag icon={<UserOutlined />} color={item.creator === account ? "blue" : (colorGroup[userAddresses.indexOf(item.creator) % 10])}>{item.creator}</Tag>,
                         votesInfo: `${_approveVotes[index]}/${_rejectVotes[index]}`,
-                        status: <Tag color="success">已通过</Tag>
+                        status: <Tag color="success">Already Approval</Tag>
                     };
                 });
 
@@ -332,7 +333,7 @@ const DonationAndVotingSystemContractPage = () => {
                         content: item.content,
                         creator: <Tag icon={<UserOutlined />} color={item.creator === account ? "blue" : (colorGroup[userAddresses.indexOf(item.creator) % 10])}>{item.creator}</Tag>,
                         votesInfo: `${_approveVotes[index]}/${_rejectVotes[index]}`,
-                        status: <Tag color="error">已拒绝</Tag>
+                        status: <Tag color="error">Already Rejected</Tag>
                     };
                 });
 
@@ -350,7 +351,7 @@ const DonationAndVotingSystemContractPage = () => {
         }
     }, [account, donationsInfo, donationsInfo.length, userInfo]);
 
-    // 自动获取发布捐赠需要消耗的金币数量Gold
+    // 自动获取发布捐赠需要消耗的金币数量Gold / Automatically gets the amount of Gold needed to publish a donation
     const getGoldConsumedByDonation = async () => {
         // @ts-ignore
         if (DonationAndVotingSystemContract_Contract) {
@@ -361,7 +362,7 @@ const DonationAndVotingSystemContractPage = () => {
                 revertOutput(error)
             }
         } else {
-            setErrorMessage('合约不存在！')
+            setErrorMessage('The contract does not exist!')
         }
     }
     useEffect(() => {
@@ -370,19 +371,18 @@ const DonationAndVotingSystemContractPage = () => {
         }
     }, [account])
 
-    // 自动获取投票所需要的金币数量Gold
+    // 自动获取投票所需要的金币数量Gold / Automatically gets the amount of Gold required to vote gold
     const getGoldConsumedByVote = async () => {
         // @ts-ignore
         if (DonationAndVotingSystemContract_Contract) {
             try {
-                // getGoldConsumedByVote需要加一个参数，donation id
                 const _goldConsumedByVote = await DonationAndVotingSystemContract_Contract.methods.getGoldConsumedByVote().call({from: account})
                 setGoldConsumedByVote(_goldConsumedByVote)
             } catch (error: any) {
                 revertOutput(error)
             }
         } else {
-            setErrorMessage('合约不存在！')
+            setErrorMessage('The contract does not exist!')
         }
     }
     useEffect(() => {
@@ -391,7 +391,7 @@ const DonationAndVotingSystemContractPage = () => {
         }
     }, [account])
 
-    // 自动获取最大投票次数
+    // 自动获取最大投票次数 / Automatically obtains the maximum number of votes
     const getMaxVotingTimes = async () => {
         // @ts-ignore
         if (DonationAndVotingSystemContract_Contract) {
@@ -402,7 +402,7 @@ const DonationAndVotingSystemContractPage = () => {
                 revertOutput(error)
             }
         } else {
-            setErrorMessage('合约不存在！')
+            setErrorMessage('The contract does not exist!')
         }
     }
     useEffect(() => {
@@ -411,7 +411,7 @@ const DonationAndVotingSystemContractPage = () => {
         }
     }, [account])
 
-    // 自动获取金币Gold的数量
+    // 自动获取金币Gold的数量 / Automatically retrieves the amount of Gold coins
     const getInitialUserGold = async () => {
         // @ts-ignore
         if (GoldContract_Contract) {
@@ -422,7 +422,7 @@ const DonationAndVotingSystemContractPage = () => {
                 revertOutput(error)
             }
         } else {
-            setErrorMessage('合约不存在！')
+            setErrorMessage('The contract does not exist!')
         }
     }
     useEffect(() => {
@@ -431,11 +431,11 @@ const DonationAndVotingSystemContractPage = () => {
         }
     }, [account])
 
-    // 手动领取金币Gold
+    // 手动领取金币Gold / Pick up Gold coins manually
     const getGold = async () => {
         setGetGoldSubmittedLoading(true)
         if (account === '') {
-            setErrorMessage('你尚未连接钱包！')
+            setErrorMessage('You have not connected your wallet yet!')
             return
         }
         // @ts-ignore
@@ -450,21 +450,21 @@ const DonationAndVotingSystemContractPage = () => {
                 getDonationInfo()
                 // getApprovalDonationRankingListInfo()
                 // getRejectedDonationRankingListInfo()
-                setSuccessMessage('成功兑换10000金币(Gold)。')
+                setSuccessMessage('Successfully redeemed 10000 Golds.')
             } catch (error: any) {
                 revertOutput(error)
             }
         } else {
-            setErrorMessage('合约不存在！')
+            setErrorMessage('The contract does not exist!')
         }
         setGetGoldSubmittedLoading(false)
     }
 
-    // TODO: 手动将gold兑换为ETH(已完成)
+    // 手动将gold兑换为ETH / Manually convert gold to ETH
     const getETH = async () => {
         setGetETHSubmittedLoading(true)
         if (account === '') {
-            setErrorMessage('你尚未连接钱包！')
+            setErrorMessage('You have not connected your wallet yet!')
             return
         }
         // @ts-ignore
@@ -475,49 +475,47 @@ const DonationAndVotingSystemContractPage = () => {
                 getDonationInfo()
                 // getApprovalDonationRankingListInfo()
                 // getRejectedDonationRankingListInfo()
-                setSuccessMessage('成功兑换为ETH。')
+                setSuccessMessage('Successfully converted to ETH.')
             } catch (error: any) {
                 revertOutput(error)
             }
         } else {
-            setErrorMessage('合约不存在！')
+            setErrorMessage('The contract does not exist!')
         }
         setGetETHSubmittedLoading(false)
     }
 
-    // 手动领取纪念品
+    // 手动领取纪念品 / Manual souvenir collection
     const getAwardReward = async () => {
         setGetAwardRewardSubmittedLoading(true)
         if (account === '') {
-            setErrorMessage('你尚未连接钱包！')
+            setErrorMessage('You have not connected your wallet yet!')
             return
         }
         // @ts-ignore
         if (DonationAndVotingSystemContract_Contract && AwardContract_Contract) {
             try {
-                // setAwardButtonDisabled(true);  // 禁用按钮，防止重复点击
                 await DonationAndVotingSystemContract_Contract.methods.getAwardReward().send({from: account})
-                // await new Promise(resolve => setTimeout(resolve, 500)); // 加入短暂延迟，确保链上状态更新
                 getUserInfo()
                 getDonationInfo()
                 // getApprovalDonationRankingListInfo()
                 // getRejectedDonationRankingListInfo()
-                setSuccessMessage('恭喜！你获得了纪念品！')
+                setSuccessMessage('Congrats! You got a souvenir(reward)!')
             } catch (error: any) {
                 revertOutput(error)
             } finally {
                 // setAwardButtonDisabled(false);  // 重新启用按钮
             }
         } else {
-            setErrorMessage('合约不存在！')
+            setErrorMessage('The contract does not exist!')
         }
         setGetAwardRewardSubmittedLoading(false)
     }
 
-    // 手动领取金币奖励
+    // 手动领取金币奖励 / Manually claim gold rewards
     const getGoldRewardFromDonationApproved = async (id: number) => {
         if (account === '') {
-            setErrorMessage('你尚未连接钱包！')
+            setErrorMessage('You have not connected your wallet yet!')
             return
         }
         // @ts-ignore
@@ -531,24 +529,23 @@ const DonationAndVotingSystemContractPage = () => {
                 getDonationInfo()
                 // getApprovalDonationRankingListInfo()
                 // getRejectedDonationRankingListInfo()
-                setSuccessMessage('恭喜！你因为捐赠通过得到了金币Gold奖励！')
+                setSuccessMessage('Congrats! You got Golds for your donation!')
             } catch (error: any) {
                 revertOutput(error)
             }
         } else {
-            setErrorMessage('合约不存在！')
+            setErrorMessage('The contract does not exist!')
         }
     }
 
-    // 手动发起新的捐赠
+    // 手动发起新的捐赠 / Initiate a new donation manually
     const addNewDonation = async (content: string, startTime: number, endTime: number) => {
         if (account === '') {
-            setErrorMessage('你尚未连接钱包！')
+            setErrorMessage('You have not connected your wallet yet!')
             return
         }
         // @ts-ignore
         if (DonationAndVotingSystemContract_Contract && GoldContract_Contract) {
-            // 前端判定用户是否到达了最大投票次数
             try {
                 await GoldContract_Contract.methods.approve(DonationAndVotingSystemContract_Contract.options.address, goldConsumedByDonation).send({from: account})
                 await DonationAndVotingSystemContract_Contract.methods.addNewDonation(content, startTime, endTime).send({from: account})
@@ -556,46 +553,53 @@ const DonationAndVotingSystemContractPage = () => {
                 getDonationInfo()
                 // getApprovalDonationRankingListInfo()
                 // getRejectedDonationRankingListInfo()
-                setSuccessMessage('你成功发布了一项新的捐赠')
+                setSuccessMessage('You have successfully posted a new donation!')
                 setSubmit(true)
                 _donationContent = ""
             } catch (error: any) {
                 revertOutput(error)
             }
         } else {
-            setErrorMessage('合约不存在！')
+            setErrorMessage('The contract does not exist!')
         }
     }
 
 
-    // 手动投票
+    // 手动投票 / Manual voting
     const voteOnDonation = async (behavior: number, id: number) => {
         // console.log("item.id = ", id)
         if (account === '') {
-            setErrorMessage('你尚未连接钱包！')
+            setErrorMessage('You have not connected your wallet yet!')
             return
         }
         // @ts-ignore
         if (DonationAndVotingSystemContract_Contract && GoldContract_Contract) {
             try {
-                // 检查是否到达最大投票次数
+                // 检查是否到达最大投票次数 / Check whether the maximum number of votes has been reached
                 const canVote = await DonationAndVotingSystemContract_Contract.methods.checkWhetherReachedTheMaxVotingTimes(id).call({from: account})
                 // console.log("canVote: ", canVote)
                 if (canVote === false) {
-                    setErrorMessage('当前捐赠您已到达最大投票次数！')
+                    setErrorMessage('Current Donation you have reached the maximum number of votes!')
                     return
                 }
 
-                // 检查投票是否合法
+                // 检查投票是否合法 / Check if the vote is legitimate
                 const canVote2 = await DonationAndVotingSystemContract_Contract.methods.checkVotingConditions(id, behavior).call({from: account})
                 // console.log("canVote2: ", canVote2)
                 if (canVote2 === false) {
-                    setErrorMessage('您的投票不合法！您的投票必须和之前的投票一致！且每个捐赠只能拒绝一次！')
+                    setErrorMessage('Your vote is not legal! Your vote must be consistent with the previous vote! And each donation can only be rejected once!')
                     return
                 }
 
                 const _goldConsumedByVote = await DonationAndVotingSystemContract_Contract.methods.updateGetGoldConsumedByVote(id).call({from: account})
                 // console.log("_goldConsumedByVote: ", _goldConsumedByVote)
+
+                // 检查余额是否足够支持投票 / Check if the balance is sufficient to support the vote
+                const canVote3 = await DonationAndVotingSystemContract_Contract.methods.checkWhetherHaveEnoughGoldToVote(_goldConsumedByVote).call({from: account})
+                if (canVote3 === false) {
+                    setErrorMessage('Your balance is insufficient!')
+                    return
+                }
 
                 await GoldContract_Contract.methods.approve(DonationAndVotingSystemContract_Contract.options.address, _goldConsumedByVote).send({from: account})
                 await DonationAndVotingSystemContract_Contract.methods.voteOnDonation(behavior, id).send({from: account}).catch((error: any) => {
@@ -613,9 +617,9 @@ const DonationAndVotingSystemContractPage = () => {
                 // getApprovalDonationRankingListInfo()
                 // getRejectedDonationRankingListInfo()
                 if (behavior === 1) {
-                    setSuccessMessage('你成功投出了赞成票。请记住，你共有' + maxVotingTimes + '次投票机会。')
+                    setSuccessMessage('You spent ' + _goldConsumedByVote + ' Golds. ' + 'You successfully voted for approval. Keep in mind that you have a total of ' + maxVotingTimes + ' votes per donation.')
                 } else {
-                    setSuccessMessage('你成功投出了反对票。请记住，你共有' + maxVotingTimes + '次投票机会。')
+                    setSuccessMessage('You spent ' + _goldConsumedByVote + ' Golds. ' + 'You successfully voted for rejected. Keep in mind that you have a total of ' + maxVotingTimes + ' votes per donation.')
                 }
             } catch (error: any) {
                 // console.log('error: ', error)
@@ -623,14 +627,14 @@ const DonationAndVotingSystemContractPage = () => {
                 revertOutput(error)
             }
         } else {
-            setErrorMessage('合约不存在！')
+            setErrorMessage('The contract does not exist!')
         }
     }
 
-    // 手动刷新排行榜
+    // 手动刷新排行榜 / Manually refresh the leaderboard
     const reloadRankingList = async () => {
         if (account === '') {
-            setErrorMessage('你尚未连接钱包！')
+            setErrorMessage('You have not connected your wallet yet!')
             return
         }
         // @ts-ignore
@@ -643,25 +647,25 @@ const DonationAndVotingSystemContractPage = () => {
                     // getApprovalDonationRankingListInfo()
                     // getRejectedDonationRankingListInfo()
                 } else {
-                    setErrorMessage('您的Gold余额不足(刷新排行榜需余额大于0)！')
+                    setErrorMessage('Your Gold balance is insufficient (a balance greater than 0 is required to refresh the ranking list)!')
                 }
             } catch (error: any) {
                 revertOutput(error)
             }
         } else {
-            setErrorMessage('合约不存在！')
+            setErrorMessage('The contract does not exist!')
         }
     }
 
-    // Ant Design相关内容
+    // Ant Design相关内容 / Ant Design related content
     const { Header, Content,  Footer, Sider } = Layout;
 
-    // 侧边菜单栏
+    // 侧边菜单栏 / Side menu bar
     const [menuKey, setMenuKey] = useState(0);
     const _items = [
-        { icon: ShopOutlined, label: "捐赠中心" },
-        { icon: UserOutlined, label: "用户中心" },
-        { icon: ToTopOutlined, label: "排行榜" }
+        { icon: ShopOutlined, label: "Donation Center" },
+        { icon: UserOutlined, label: "User Center" },
+        { icon: ToTopOutlined, label: "Ranking Lists" }
     ]
     const items: MenuProps['items'] = _items.map((value, index) => ({
         key: String(index),
@@ -669,10 +673,10 @@ const DonationAndVotingSystemContractPage = () => {
         label: value.label
     }))
 
-    // 用户颜色
+    // 用户颜色 / User color
     const colorGroup = ["red", "gold", "green", "cyan", "magenta","orange","lime","geekblue","volcano","purple"]
 
-    // 表格数据
+    // 表格数据 / Tabular data
     const [allDonationData, setAllDonationData] = useState([] as {
         id: number;
         voteStartTime: string;
@@ -735,15 +739,15 @@ const DonationAndVotingSystemContractPage = () => {
                     if (item.status === 0) {
                         button_action =
                             <div>
-                                <Popconfirm title={"投票将消耗至少 " + goldConsumedByVote + " Gold(取决于你对该捐赠的历史投票次数)。你目前拥有" + userInfo.balance + " Gold。确定继续吗？"} onConfirm={() => voteOnDonation(1, item.id)} okText="确定" cancelText="取消" placement="leftTop">
-                                    <Button icon={<CheckSquareFilled />}>赞成</Button>
+                                <Popconfirm title={"Voting will cost at least " + goldConsumedByVote + " Golds (depending on how many times you have historically voted for that donation). Now you have " + userInfo.balance + " Golds. Are you sure to continue?"} onConfirm={() => voteOnDonation(1, item.id)} okText="Confirm" cancelText="Cancel" placement="leftTop">
+                                    <Button icon={<CheckSquareFilled />}>Approve</Button>
                                 </Popconfirm>
-                                <Popconfirm title={"投票将消耗至少 " + goldConsumedByVote + " Gold(取决于你对该捐赠的历史投票次数)。你目前拥有" + userInfo.balance + " Gold。确定继续吗？"} onConfirm={() => voteOnDonation(0, item.id)} okText="确定" cancelText="取消" placement="leftTop">
-                                    <Button icon={<CloseSquareFilled />}>反对</Button>
+                                <Popconfirm title={"Voting will cost at least " + goldConsumedByVote + " Golds (depending on how many times you have historically voted for that donation). Now you have " + userInfo.balance + " Golds. Are you sure to continue?"} onConfirm={() => voteOnDonation(0, item.id)} okText="Confirm" cancelText="Cancel" placement="leftTop">
+                                    <Button icon={<CloseSquareFilled />}>Reject</Button>
                                 </Popconfirm>
                             </div>;
                     } else if (item.status === 2 && item.getGoldReward === true) {
-                        button_action = <Button icon={<DollarCircleOutlined />} onClick={() => getGoldRewardFromDonationApproved(item.id)}>领取金币Gold奖励</Button>;
+                        button_action = <Button icon={<DollarCircleOutlined />} onClick={() => getGoldRewardFromDonationApproved(item.id)}>Receive Golds</Button>;
 
                     }
                     return {
@@ -754,7 +758,7 @@ const DonationAndVotingSystemContractPage = () => {
                         content: item.content,
                         creator: <Tag icon={<UserOutlined />} color={item.creator === account ? "blue" : (colorGroup[userAddresses.indexOf(item.creator) % 10])}>{item.creator}</Tag>,
                         votesInfo: item.votesInfo.filter((item) => {return item.behavior == 1}).length + "/" + item.votesInfo.filter((item) => {return item.behavior == 0}).length,
-                        status: (item.status == 0 ? <Tag color="processing">正在投票中</Tag> : (item.status == 1 ? <Tag color="error">已拒绝</Tag> : (item.status == 2 ? <Tag color="success">已通过</Tag> : <Tag color="warning">投票尚未开始</Tag>))),
+                        status: (item.status == 0 ? <Tag color="processing">Voting in Progressing</Tag> : (item.status == 1 ? <Tag color="error">Already Rejected</Tag> : (item.status == 2 ? <Tag color="success">Already Approval</Tag> : <Tag color="warning">Voting Not Started</Tag>))),
                         action: button_action
                     }
                 }))
@@ -762,7 +766,7 @@ const DonationAndVotingSystemContractPage = () => {
                 revertOutput(error)
             }
         }
-    }, [donationsInfo])
+    }, [donationsInfo, userInfo.donationIds])
     useEffect(() => {
         if (account !== "" && donationsInfo && userInfo.donationIds) {
             try {
@@ -771,15 +775,15 @@ const DonationAndVotingSystemContractPage = () => {
                     if (item.status === 0) {
                         button_action =
                             <div>
-                                <Popconfirm title={"投票将消耗至少 " + goldConsumedByVote + " Gold(取决于你对该捐赠的历史投票次数)。你目前拥有" + userInfo.balance + " Gold。确定继续吗？"} onConfirm={() => voteOnDonation(1, item.id)} okText="确定" cancelText="取消" placement="leftTop">
+                                <Popconfirm title={"Voting will cost at least " + goldConsumedByVote + " Golds (depending on how many times you have historically voted for that donation). Now you have " + userInfo.balance + " Golds. Are you sure to continue?"} onConfirm={() => voteOnDonation(1, item.id)} okText="Confirm" cancelText="Cancel" placement="leftTop">
                                     <Button icon={<CheckSquareFilled />}>赞成</Button>
                                 </Popconfirm>
-                                <Popconfirm title={"投票将消耗至少 " + goldConsumedByVote + " Gold(取决于你对该捐赠的历史投票次数)。你目前拥有" + userInfo.balance + " Gold。确定继续吗？"} onConfirm={() => voteOnDonation(0, item.id)} okText="确定" cancelText="取消" placement="leftTop">
+                                <Popconfirm title={"Voting will cost at least " + goldConsumedByVote + " Golds (depending on how many times you have historically voted for that donation). Now you have " + userInfo.balance + " Golds. Are you sure to continue?"} onConfirm={() => voteOnDonation(0, item.id)} okText="Confirm" cancelText="Cancel" placement="leftTop">
                                     <Button icon={<CloseSquareFilled />}>反对</Button>
                                 </Popconfirm>
                             </div>;
                     } else if (item.status === 2 && item.getGoldReward === true) {
-                        button_action = <Button icon={<DollarCircleOutlined />} onClick={() => getGoldRewardFromDonationApproved(item.id)}>领取金币Gold奖励</Button>;
+                        button_action = <Button icon={<DollarCircleOutlined />} onClick={() => getGoldRewardFromDonationApproved(item.id)}>Receive Golds</Button>;
                     }
                     return {
                         key: item.id,
@@ -788,7 +792,7 @@ const DonationAndVotingSystemContractPage = () => {
                         voteEndTime: getDate(item.voteEndTime),
                         content: item.content,
                         votesInfo: <Button type="link" onClick={() => info(item.id)}>{item.votesInfo.filter((item) => {return item.behavior === 1}).length + "/" + item.votesInfo.filter((item) => {return item.behavior === 0}).length}</Button>,
-                        status: (item.status === 0 ? <Tag color="processing">正在投票中</Tag> : (item.status === 1 ? <Tag color="error">已拒绝</Tag> : (item.status === 2 ? <Tag color="success">已通过</Tag> : <Tag color="warning">投票尚未开始</Tag>))),
+                        status: (item.status === 0 ? <Tag color="processing">Voting in Progressing</Tag> : (item.status === 1 ? <Tag color="error">Already Rejected</Tag> : (item.status === 2 ? <Tag color="success">Already Approval</Tag> : <Tag color="warning">Voting Not Started</Tag>))),
                         action: button_action
                     }
                 })
@@ -810,12 +814,12 @@ const DonationAndVotingSystemContractPage = () => {
                     if (item.status === 0) {
                         button_action =
                             <div>
-                                <Button icon={<CheckSquareFilled />} onClick={() => voteOnDonation(1, item.id)}>赞成</Button>
-                                <Button icon={<CloseSquareFilled />} onClick={() => voteOnDonation(0, item.id)}>反对</Button>
+                                <Button icon={<CheckSquareFilled />} onClick={() => voteOnDonation(1, item.id)}>Approve</Button>
+                                <Button icon={<CloseSquareFilled />} onClick={() => voteOnDonation(0, item.id)}>Reject</Button>
                             </div>;
                     } else if (item.status === 2 && item.getGoldReward === true) {
                         button_action =
-                            <Button icon={<DollarCircleOutlined />} onClick={() => getGoldRewardFromDonationApproved(item.id)}>领取金币Gold奖励</Button>;
+                            <Button icon={<DollarCircleOutlined />} onClick={() => getGoldRewardFromDonationApproved(item.id)}>Receive Golds</Button>;
                     }
                     return {
                         id: item.id,
@@ -824,7 +828,7 @@ const DonationAndVotingSystemContractPage = () => {
                         content: item.content,
                         creator: <Tag icon={<UserOutlined />}>{item.creator}</Tag>,
                         votesInfo: item.votesInfo,
-                        status: (item.status === 0 ? <Tag color="processing">正在投票中</Tag> : (item.status === 1 ? <Tag color="error">已拒绝</Tag> : (item.status === 2 ? <Tag color="success">已通过</Tag> : <Tag color="warning">投票尚未开始</Tag>))),
+                        status: (item.status === 0 ? <Tag color="processing">Voting in Progressing</Tag> : (item.status === 1 ? <Tag color="error">Already Rejected</Tag> : (item.status === 2 ? <Tag color="success">Already Approval</Tag> : <Tag color="warning">Voting Not Started</Tag>))),
                         action: button_action
                     }
                 })
@@ -845,7 +849,7 @@ const DonationAndVotingSystemContractPage = () => {
                             id: item.id,
                             voteTime: getDate(_item.voteTime),
                             voter: <Tag icon={<UserOutlined />} color={_item.voter === account ? "blue" : (colorGroup[userAddresses.indexOf(_item.voter) % 10])}>{_item.voter}</Tag>,
-                            behavior: (_item.behavior === 1 ? "赞成" : "反对")
+                            behavior: (_item.behavior === 1 ? "Approve" : "Reject")
                         })
                     })
                 })
@@ -862,7 +866,7 @@ const DonationAndVotingSystemContractPage = () => {
                     // console.log("item: ", item)
                     return {
                         key: item.donationIdVotedOn,
-                        behavior: (item.behavior == 1 ? "赞成" : "反对"),
+                        behavior: (item.behavior == 1 ? "Approve" : "Reject"),
                         voteTime: getDate(item.voteTime),
                         donationIdVotedOn: item.donationIdVotedOn, // undefined
                         content: (donationsInfo.filter((_item) => _item.id == item.donationIdVotedOn).length > 0 ? donationsInfo.filter((_item) => _item.id == item.donationIdVotedOn)[0].content : "")
@@ -904,51 +908,51 @@ const DonationAndVotingSystemContractPage = () => {
         action: JSX.Element;
     }> = [
         {
-            title: '编号',
+            title: 'ID',
             dataIndex: 'id',
             key: 'id',
             align: 'center' as 'center',
         },
         {
-            title: '开始时间',
+            title: 'Start Time',
             dataIndex: 'voteStartTime',
             key: 'voteStartTime',
             align: 'center' as 'center',
             sorter: (a, b) => Date.parse(a.voteStartTime) - Date.parse(b.voteStartTime),
         },
         {
-            title: '截止时间',
+            title: 'End Time',
             dataIndex: 'voteEndTime',
             key: 'voteEndTime',
             align: 'center' as 'center',
             sorter: (a, b) => Date.parse(a.voteEndTime) - Date.parse(b.voteEndTime),
         },
         {
-            title: '捐赠内容',
+            title: 'Content',
             dataIndex: 'content',
             key: 'content',
             align: 'center' as 'center',
         },
         {
-            title: '发起人',
+            title: 'Creator',
             dataIndex: 'creator',
             key: 'creator',
             align: 'center' as 'center',
         },
         {
-            title: '赞成数/反对数',
+            title: 'Approval Counts/Rejected Counts',
             dataIndex: 'votesInfo',
             key: 'votesInfo',
             align: 'center' as 'center',
         },
         {
-            title: '捐赠状态',
+            title: 'Status',
             dataIndex: 'status',
             key: 'status',
             align: 'center' as 'center',
         },
         {
-            title: '操作',
+            title: 'Action',
             dataIndex: 'action',
             key: 'action',
             align: 'center' as 'center',
@@ -965,45 +969,45 @@ const DonationAndVotingSystemContractPage = () => {
         status: JSX.Element;
     }> = [
         {
-            title: '编号',
+            title: 'ID',
             dataIndex: 'id',
             key: 'id',
             align: 'center' as 'center',
         },
         {
-            title: '开始时间',
+            title: 'Start Time',
             dataIndex: 'voteStartTime',
             key: 'voteStartTime',
             align: 'center' as 'center',
             sorter: (a, b) => Date.parse(a.voteStartTime) - Date.parse(b.voteStartTime),
         },
         {
-            title: '截止时间',
+            title: 'End Time',
             dataIndex: 'voteEndTime',
             key: 'voteEndTime',
             align: 'center' as 'center',
             sorter: (a, b) => Date.parse(a.voteEndTime) - Date.parse(b.voteEndTime),
         },
         {
-            title: '捐赠内容',
+            title: 'Content',
             dataIndex: 'content',
             key: 'content',
             align: 'center' as 'center',
         },
         {
-            title: '发起人',
+            title: 'Creator',
             dataIndex: 'creator',
             key: 'creator',
             align: 'center' as 'center',
         },
         {
-            title: '赞成数/反对数',
+            title: 'Approval Counts/Rejected Counts',
             dataIndex: 'votesInfo',
             key: 'votesInfo',
             align: 'center' as 'center',
         },
         {
-            title: '捐赠状态',
+            title: 'Status',
             dataIndex: 'status',
             key: 'status',
             align: 'center' as 'center',
@@ -1020,45 +1024,45 @@ const DonationAndVotingSystemContractPage = () => {
         status: JSX.Element;
     }> = [
         {
-            title: '编号',
+            title: 'ID',
             dataIndex: 'id',
             key: 'id',
             align: 'center' as 'center',
         },
         {
-            title: '开始时间',
+            title: 'Start Time',
             dataIndex: 'voteStartTime',
             key: 'voteStartTime',
             align: 'center' as 'center',
             sorter: (a, b) => Date.parse(a.voteStartTime) - Date.parse(b.voteStartTime),
         },
         {
-            title: '截止时间',
+            title: 'End Time',
             dataIndex: 'voteEndTime',
             key: 'voteEndTime',
             align: 'center' as 'center',
             sorter: (a, b) => Date.parse(a.voteEndTime) - Date.parse(b.voteEndTime),
         },
         {
-            title: '捐赠内容',
+            title: 'Content',
             dataIndex: 'content',
             key: 'content',
             align: 'center' as 'center',
         },
         {
-            title: '发起人',
+            title: 'Creator',
             dataIndex: 'creator',
             key: 'creator',
             align: 'center' as 'center',
         },
         {
-            title: '赞成数/反对数',
+            title: 'Approval Counts/Rejected Counts',
             dataIndex: 'votesInfo',
             key: 'votesInfo',
             align: 'center' as 'center',
         },
         {
-            title: '捐赠状态',
+            title: 'Status',
             dataIndex: 'status',
             key: 'status',
             align: 'center' as 'center',
@@ -1075,45 +1079,45 @@ const DonationAndVotingSystemContractPage = () => {
         action: JSX.Element;
     }> = [
         {
-            title: '编号',
+            title: 'ID',
             dataIndex: 'id',
             key: 'id',
             align: 'center' as 'center',
         },
         {
-            title: '开始时间',
+            title: 'Start Time',
             dataIndex: 'voteStartTime',
             key: 'voteStartTime',
             align: 'center' as 'center',
             sorter: (a, b) => Date.parse(a.voteStartTime) - Date.parse(b.voteStartTime),
         },
         {
-            title: '截止时间',
+            title: 'End Time',
             dataIndex: 'voteEndTime',
             key: 'voteEndTime',
             align: 'center' as 'center',
             sorter: (a, b) => Date.parse(a.voteEndTime) - Date.parse(b.voteEndTime),
         },
         {
-            title: '捐赠内容',
+            title: 'Content',
             dataIndex: 'content',
             key: 'content',
             align: 'center' as 'center',
         },
         {
-            title: '赞成数/反对数',
+            title: 'Approval Counts/Rejected Counts',
             dataIndex: 'votesInfo',
             key: 'votesInfo',
             align: 'center' as 'center',
         },
         {
-            title: '捐赠状态',
+            title: 'Status',
             dataIndex: 'status',
             key: 'status',
             align: 'center' as 'center',
         },
         {
-            title: '操作',
+            title: 'Action',
             dataIndex: 'action',
             key: 'action',
             align: 'center' as 'center',
@@ -1127,26 +1131,26 @@ const DonationAndVotingSystemContractPage = () => {
         content: string;
     }> = [
         {
-            title: '投票的捐赠编号',
+            title: 'ID of Donation',
             dataIndex: 'donationIdVotedOn',
             key: 'donationIdVotedOn',
             align: 'center' as 'center',
         },
         {
-            title: '投票的捐赠内容',
+            title: 'Content',
             dataIndex: 'content',
             key: 'content',
             align: 'center' as 'center',
         },
         {
-            title: '投票时间',
+            title: 'Vote Time',
             dataIndex: 'voteTime',
             key: 'voteTime',
             align: 'center' as 'center',
             sorter: (a, b) => Date.parse(a.voteTime) - Date.parse(b.voteTime),
         },
         {
-            title: '投票行为',
+            title: 'Behavior',
             dataIndex: 'behavior',
             key: 'behavior',
             align: 'center' as 'center',
@@ -1160,20 +1164,20 @@ const DonationAndVotingSystemContractPage = () => {
         behavior: string;
     }> = [
         {
-            title: '投票时间',
+            title: 'Vote Time',
             dataIndex: 'voteTime',
             key: 'voteTime',
             align: 'center' as 'center',
             sorter: (a, b) => Date.parse(a.voteTime) - Date.parse(b.voteTime),
         },
         {
-            title: '投票人',
+            title: 'Voter',
             dataIndex: 'voter',
             key: 'voter',
             align: 'center' as 'center',
         },
         {
-            title: '投票行为',
+            title: 'Behavior',
             dataIndex: 'behavior',
             key: 'behavior',
             align: 'center' as 'center',
@@ -1186,19 +1190,19 @@ const DonationAndVotingSystemContractPage = () => {
         awardTime: string
     }> = [
         {
-            title: '纪念品独有编号',
+            title: 'ID of Souvenir',
             dataIndex: 'id',
             key: 'id',
             align: 'center' as 'center',
         },
         {
-            title: '纪念品名称',
+            title: 'Souvenir Name',
             dataIndex: 'URI',
             key: 'URI',
             align: 'center' as 'center',
         },
         {
-            title: '领取时间',
+            title: 'Awarding Time',
             dataIndex: 'awardTime',
             key: 'awardTime',
             align: 'center' as 'center',
@@ -1215,7 +1219,7 @@ const DonationAndVotingSystemContractPage = () => {
                     <Table dataSource={allDonationData} columns={columnsDonation} pagination={{
                         hideOnSinglePage: true, // 只有一页时不显示分页
                         pageSize: 5,
-                        showTotal: () => `共 ${allDonationData.length} 条`,
+                        showTotal: () => `${allDonationData.length} in total`,
                         total: allDonationData.length,
                     }} />
                 </div>
@@ -1233,7 +1237,7 @@ const DonationAndVotingSystemContractPage = () => {
                     <Table dataSource={allApprovalDonationData} columns={columnsApprovalDonation} pagination={{
                         hideOnSinglePage: true,
                         pageSize: 5,
-                        showTotal: () => `共 ${allApprovalDonationData.length} 条`,
+                        showTotal: () => `${allApprovalDonationData.length} in total`,
                         total: allApprovalDonationData.length,
                     }}>
                     </Table>
@@ -1251,7 +1255,7 @@ const DonationAndVotingSystemContractPage = () => {
                     <Table dataSource={allRejectedDonationData} columns={columnsRejectedDonation} pagination={{
                         hideOnSinglePage: true,
                         pageSize: 5,
-                        showTotal: () => `共 ${allRejectedDonationData.length} 条`,
+                        showTotal: () => `${allRejectedDonationData.length} in total`,
                         total: allRejectedDonationData.length,
                     }}>
                     </Table>
@@ -1267,7 +1271,7 @@ const DonationAndVotingSystemContractPage = () => {
             return <Table dataSource={userDonationData} columns={columnsUserDonation} pagination={{
                 hideOnSinglePage: true,
                 pageSize: 5,
-                showTotal: () => `共 ${userDonationData.length} 条`,
+                showTotal: () => `${userDonationData.length} in total`,
                 total: userDonationData.length,
             }}/>
         }
@@ -1281,7 +1285,7 @@ const DonationAndVotingSystemContractPage = () => {
             return <Table dataSource={userVoteData} columns={columnsVote} pagination={{
                 hideOnSinglePage: true,
                 pageSize: 5,
-                showTotal: () => `共 ${userVoteData.length} 条`,
+                showTotal: () => `${userVoteData.length} in total`,
                 total: userVoteData.length,
             }}/>
         }
@@ -1294,7 +1298,7 @@ const DonationAndVotingSystemContractPage = () => {
             return <Table dataSource={userDonationVoteData.filter((item) => item.id === id.id)} columns={columnsDonationVote} pagination={{
                 hideOnSinglePage: true,
                 pageSize: 5,
-                showTotal: () => `共 ${userDonationVoteData.filter((item) => item.id === id.id).length} 条`,
+                showTotal: () => `${userDonationVoteData.filter((item) => item.id === id.id).length} in total`,
                 total: userDonationVoteData.filter((item) => item.id === id.id).length,
             }}/>
         }
@@ -1307,13 +1311,13 @@ const DonationAndVotingSystemContractPage = () => {
             return <Table dataSource={userAwardData} columns={columnsAward} pagination={{
                 hideOnSinglePage: true,
                 pageSize: 5,
-                showTotal: () => `共 ${userAwardData.length} 条`,
+                showTotal: () => `${userAwardData.length} in total`,
                 total: userAwardData.length,
             }}/>
         }
     }
 
-    // 提交捐赠数据
+    // 提交捐赠数据 / Submit donation data
     let _donationContent = ""
     let _startTime = 0
     let _endTime = 0
@@ -1367,16 +1371,16 @@ const DonationAndVotingSystemContractPage = () => {
 
         if (_startTime === 0 || _endTime === 0) {
             timeValidity = false;
-            setErrorMessage("开始时间和结束时间必须设置！");
+            setErrorMessage("Start time and end time must be set!");
         } else if (_endTime < timeNow()) {
             timeValidity = false;
-            setErrorMessage("结束时间必须在未来！")
+            setErrorMessage("The end time must be in the future!")
         } else {
             timeValidity = true;
         }
     }
 
-    // 捐赠中心的HTML
+    // 捐赠中心的HTML / HTML for the donation center
     const DonationCenter = () => {
         // console.log("donationInfo: ", donationsInfo)
         return (
@@ -1387,10 +1391,10 @@ const DonationAndVotingSystemContractPage = () => {
                     <br />
                     <Row justify="space-around" align="middle">
 
-                        <Col span={6}><FileTextOutlined /> <br/>捐赠总数{donationsInfo.length}项</Col>
-                        <Col span={6}><FileDoneOutlined /> <br/>捐赠通过率{donationsInfo.length==0?0:(donationsInfo.filter((item)=>item.status===2).length+donationsInfo.filter((item)=>item.status===1).length)==0?0:(donationsInfo.filter((item)=>item.status===2).length / (donationsInfo.filter((item)=>item.status===2).length+donationsInfo.filter((item)=>item.status===1).length) * 100).toFixed(2)}%</Col>
-                        <Col span={6}><TeamOutlined /> <br/>参与总人数{userAddresses.length}人</Col>
-                        <Col span={6}><HighlightOutlined /> <br/>有效投票总次数{donationsInfo.length==0?0:((donationsInfo.map((item)=>item.votesInfo.length)).map((item,index,array)=>index!=0?array[0]+=item:array[0]+=0)).reverse()[0]}次</Col>
+                        <Col span={6}><FileTextOutlined /> <br/>Total {donationsInfo.length} Donations</Col>
+                        <Col span={6}><FileDoneOutlined /> <br/>Donation Approval Rate {donationsInfo.length==0?0:(donationsInfo.filter((item)=>item.status===2).length+donationsInfo.filter((item)=>item.status===1).length)==0?0:(donationsInfo.filter((item)=>item.status===2).length / (donationsInfo.filter((item)=>item.status===2).length+donationsInfo.filter((item)=>item.status===1).length) * 100).toFixed(2)}%</Col>
+                        <Col span={6}><TeamOutlined /> <br/>Total {userAddresses.length} Participants</Col>
+                        <Col span={6}><HighlightOutlined /> <br/>Total {donationsInfo.length==0?0:((donationsInfo.map((item)=>item.votesInfo.length)).map((item,index,array)=>index!=0?array[0]+=item:array[0]+=0)).reverse()[0]} Valid Votes</Col>
 
                     </Row>
                 </Header>
@@ -1398,8 +1402,8 @@ const DonationAndVotingSystemContractPage = () => {
                     <div className="toolBar">
                         <Row justify="space-around" align="middle">
                             <Col span={20}>
-                                <Popconfirm title={"提交捐赠将消耗" + goldConsumedByDonation + " Gold。你目前拥有" + userInfo.balance + " Gold。确定继续吗？"} onConfirm={showModal} okText="确定" cancelText="取消" placement="top">
-                                    {account === "" ? <Button type="primary" size="large" shape="round" icon={<ExclamationCircleFilled />} disabled={true}>您尚未连接钱包</Button> : account !== "" && userInfo.balance >= 1000 ? <Button type="primary" size="large" shape="round" icon={<DiffTwoTone />}>发起捐赠</Button> : <Button type="primary" size="large" shape="round" icon={<FileAddOutlined />} disabled={true}>您的余额已不足1000</Button>}
+                                <Popconfirm title={"Submitting a donation will consume " + goldConsumedByDonation + " Golds. Now you have " + userInfo.balance + " Golds. Are you sure to continue?"} onConfirm={showModal} okText="Confirm" cancelText="Cancel" placement="top">
+                                    {account === "" ? <Button type="primary" size="large" shape="round" icon={<ExclamationCircleFilled />} disabled={true}>You have not connected your wallet</Button> : account !== "" && userInfo.balance >= 1000 ? <Button type="primary" size="large" shape="round" icon={<DiffTwoTone />}>Submit Donation</Button> : <Button type="primary" size="large" shape="round" icon={<FileAddOutlined />} disabled={true}>Your balance is less than 1000 golds</Button>}
                                 </Popconfirm>
                             </Col>
                         </Row>
@@ -1408,14 +1412,14 @@ const DonationAndVotingSystemContractPage = () => {
                         transitionName=""
                         maskTransitionName=""
                         open={open}
-                        title="发起捐赠"
+                        title="Submit Donation"
                         onOk={handleOk}
                         onCancel={handleCancel}
-                        maskClosable={false} // 点击遮罩区域时不会关闭
-                        forceRender // 确保对话框内的内容在初次打开时已准备好，避免焦点问题
+                        maskClosable={false} // 点击遮罩区域时不会关闭 / The masked area does not close when clicked
+                        forceRender // 确保对话框内的内容在初次打开时已准备好，避免焦点问题 / Make sure the content in the dialog box is ready when it is first opened to avoid focus issues
                         footer={[
-                            <Button key="back" onClick={handleCancel}>取消</Button>,
-                            <Button key="submit" type="primary" onClick={handleOk} disabled={submit} loading={donationSubmittedLoading}>{submit === true ? "捐赠已提交" : "提交捐赠"}</Button>
+                            <Button key="back" onClick={handleCancel}>Cancel</Button>,
+                            <Button key="submit" type="primary" onClick={handleOk} disabled={submit} loading={donationSubmittedLoading}>{submit === true ? "Donation Submitted" : "Submit Donation"}</Button>
                         ]}>
                         {(errorMessage !== "" && open === true) && <Alert type="error" message={errorMessage} banner closable afterClose={() => setErrorMessage("")} />}
                         {(successMessage !== "" && open === true) && <Alert type="success" message={successMessage} banner closable afterClose={() => setSuccessMessage("")} />}
@@ -1438,11 +1442,11 @@ const DonationAndVotingSystemContractPage = () => {
         )
     }
 
-    // 成功信息与错误信息
+    // 成功信息与错误信息 / Success message and error message
     const [successMessage, setSuccessMessage] = useState("")
     const [errorMessage, setErrorMessage] = useState("")
 
-    // 更好地输出revert报错信息
+    // 更好地输出revert报错信息 / Better output revert error messages
     const revertOutput = (err: any) => {
         const start = err.message.indexOf("revert ")
         const end = err.message.indexOf("\"", start)
@@ -1472,7 +1476,7 @@ const DonationAndVotingSystemContractPage = () => {
 
 
 
-    // 用户中心的HTML
+    // 用户中心的HTML / User center HTML
     const UserCenter = () => {
         // console.log("userInfo: ", userInfo)
         // console.log("userInfo.getAwardReward: ", userInfo.getAwardReward)
@@ -1484,10 +1488,10 @@ const DonationAndVotingSystemContractPage = () => {
                 <Header className="header">
                     <br />
                     <Row justify="space-around" align="middle">
-                        <Col span={6}><FileTextOutlined /><br />你一共提交了{(account === "" || !userInfo.donationIds) ? 0 : userInfo.donationIds.length}项捐赠</Col>
-                        <Col span={6}><HighlightOutlined /><br />你一共参与了{(account === "" || !userInfo.votesInfo) ? 0 : userInfo.votesInfo.length}次投票</Col>
-                        <Col span={6}><GiftOutlined /><br />你拥有{(account === "" || !userInfo.awardInfo) ? 0 : userInfo.awardInfo.length}个纪念品</Col>
-                        <Col span={6}><DollarCircleOutlined /><br/>你拥有{(account === "" ? 0 : userInfo.balance)} Gold</Col>
+                        <Col span={6}><FileTextOutlined /><br />You Submitted {(account === "" || !userInfo.donationIds) ? 0 : userInfo.donationIds.length} Donations</Col>
+                        <Col span={6}><HighlightOutlined /><br />You Voted {(account === "" || !userInfo.votesInfo) ? 0 : userInfo.votesInfo.length} Times</Col>
+                        <Col span={6}><GiftOutlined /><br />You have {(account === "" || !userInfo.awardInfo) ? 0 : userInfo.awardInfo.length} Souvenirs</Col>
+                        <Col span={6}><DollarCircleOutlined /><br/>You have {(account === "" ? 0 : userInfo.balance)} Golds</Col>
                     </Row>
                 </Header>
                 <Content style={{ margin: '16px', marginTop: '0px', padding: '16px', backgroundColor: "white", overflow: 'initial'}}>
@@ -1499,18 +1503,18 @@ const DonationAndVotingSystemContractPage = () => {
                         </Row>
                         <Row justify="space-around" align="middle">
                             <Col span={20}>
-                                {account === '' ? '你尚未连接' : <Tag style={{fontSize: "x-large", padding: "16px"}} icon={<UserOutlined />} color="#87d068">{account}</Tag>}
+                                {account === '' ? 'You Are Not Connected' : <Tag style={{fontSize: "x-large", padding: "16px"}} icon={<UserOutlined />} color="#87d068">{account}</Tag>}
                             </Col>
                         </Row>
                         <Row justify="space-around" align="middle" gutter={[16, 16]}>
                             <Col>
-                                {account === "" ? <Button type="primary" size="large" shape="round" icon={<ApiFilled />} onClick={onClickConnectWallet} >连接钱包</Button> : (<Button type="primary" size="large" shape="round" icon={<GiftOutlined />} onClick={getAwardReward} disabled={!userInfo.getAwardReward} loading={getAwardRewardSubmittedLoading} ghost>领取纪念品奖励</Button>)}
+                                {account === "" ? <Button type="primary" size="large" shape="round" icon={<ApiFilled />} onClick={onClickConnectWallet} >Connect Wallet</Button> : (<Button type="primary" size="large" shape="round" icon={<GiftOutlined />} onClick={getAwardReward} disabled={!userInfo.getAwardReward} loading={getAwardRewardSubmittedLoading} ghost>Receive Souvenir</Button>)}
                             </Col>
                             <Col>
-                                <Button type="primary" size="large" shape="round" icon={<DollarCircleOutlined />} onClick={getGold} disabled={account === ""} loading={getGoldSubmittedLoading}>兑换10000金币(Gold)</Button>
+                                <Button type="primary" size="large" shape="round" icon={<DollarCircleOutlined />} onClick={getGold} disabled={account === ""} loading={getGoldSubmittedLoading}>Exchange 10000 Golds</Button>
                             </Col>
                             <Col>
-                                <Button type="primary" size="large" shape="round" icon={<EuroOutlined />} onClick={getETH} disabled={account === "" || userInfo.balance === 0} loading={getETHSubmittedLoading} ghost>兑换ETH</Button>
+                                <Button type="primary" size="large" shape="round" icon={<EuroOutlined />} onClick={getETH} disabled={account === "" || userInfo.balance === 0} loading={getETHSubmittedLoading} ghost>Exchange ETH</Button>
                             </Col>
                         </Row>
                     </div>
@@ -1520,22 +1524,22 @@ const DonationAndVotingSystemContractPage = () => {
                         defaultActiveKey="1"
                         centered
                         items={[
-                            {label: (<span><FileTextOutlined />我的捐赠</span>), key: '1', children: <UserDonationTable />},
-                            {label: (<span><HighlightOutlined />我的投票</span>), key: '2', children: <UserVoteTable />},
-                            {label: (<span><GiftOutlined />我的纪念品</span>), key: '3', children: <UserAwardTable />}
+                            {label: (<span><FileTextOutlined />My Donations</span>), key: '1', children: <UserDonationTable />},
+                            {label: (<span><HighlightOutlined />My Votes</span>), key: '2', children: <UserVoteTable />},
+                            {label: (<span><GiftOutlined />My Souvenirs</span>), key: '3', children: <UserAwardTable />}
                         ]}
                     />
                     <Modal
                         transitionName=""
                         maskTransitionName=""
                         open={open_}
-                        title={"捐赠" + voteInfoId + "的投票详情"}
+                        title={"Information of Donation " + voteInfoId}
                         onCancel={handleCancel_}
-                        maskClosable={false} // 点击遮罩区域时不会关闭
-                        forceRender // 确保对话框内的内容在初次打开时已准备好，避免焦点问题
+                        maskClosable={false}
+                        forceRender
                         width={800}
                         footer={[
-                            <Button key="ok" type="primary" onClick={handleCancel_}>确定</Button>
+                            <Button key="ok" type="primary" onClick={handleCancel_}>Confirm</Button>
                         ]}
                     >
                         {(errorMessage !== "" && open === true) && <Alert type="error" message={errorMessage} banner closable afterClose={() => setErrorMessage("")} />}
@@ -1549,7 +1553,7 @@ const DonationAndVotingSystemContractPage = () => {
         )
     }
 
-    // 排行榜的HTML
+    // 排行榜的HTML / HTML for leaderboards
     const RankingList = () => {
         return (
             <Layout className="site-layout" style={{ marginLeft: 200, minHeight: 900 }}>
@@ -1558,10 +1562,10 @@ const DonationAndVotingSystemContractPage = () => {
                 <Header className="header">
                     <br />
                     <Row justify="space-around" align="middle">
-                        <Col span={6}><FileTextOutlined /><br />你一共提交了{(account === "" || !userInfo.donationIds) ? 0 : userInfo.donationIds.length}项捐赠</Col>
-                        <Col span={6}><HighlightOutlined /><br />你一共参与了{(account === "" || !userInfo.votesInfo) ? 0 : userInfo.votesInfo.length}次投票</Col>
-                        <Col span={6}><GiftOutlined /><br />你拥有{(account === "" || !userInfo.awardInfo) ? 0 : userInfo.awardInfo.length}个纪念品</Col>
-                        <Col span={6}><DollarCircleOutlined /><br/>你拥有{(account === "" ? 0 : userInfo.balance)} Gold</Col>
+                        <Col span={6}><FileTextOutlined /><br />You Submitted {(account === "" || !userInfo.donationIds) ? 0 : userInfo.donationIds.length} Donations</Col>
+                        <Col span={6}><HighlightOutlined /><br />You Voted {(account === "" || !userInfo.votesInfo) ? 0 : userInfo.votesInfo.length} Times</Col>
+                        <Col span={6}><GiftOutlined /><br />You have {(account === "" || !userInfo.awardInfo) ? 0 : userInfo.awardInfo.length} Souvenirs</Col>
+                        <Col span={6}><DollarCircleOutlined /><br/>You have {(account === "" ? 0 : userInfo.balance)} Golds</Col>
                     </Row>
                 </Header>
                 <Content style={{ margin: '16px', marginTop: '0px', padding: '16px', backgroundColor: 'white', overflow: 'initial' }}>
@@ -1569,8 +1573,8 @@ const DonationAndVotingSystemContractPage = () => {
                         defaultActiveKey="1"
                         centered
                         items={[
-                            {label: (<span><FileTextOutlined />通过的捐赠排行榜<Button size="small" type="text" onClick={reloadRankingList}><ReloadOutlined /></Button></span>), key: '1', children: <AllApprovalDonationTable />},
-                            {label: (<span><HighlightOutlined />失败的捐赠排行榜<Button size="small" type="text" onClick={reloadRankingList}><ReloadOutlined /></Button></span>), key: '2', children: <AllRejectedDonationTable />},
+                            {label: (<span><FileTextOutlined />Ranking List of Approval Donations<Button size="small" type="text" onClick={reloadRankingList}><ReloadOutlined /></Button></span>), key: '1', children: <AllApprovalDonationTable />},
+                            {label: (<span><HighlightOutlined />Ranking List of Rejected Donations<Button size="small" type="text" onClick={reloadRankingList}><ReloadOutlined /></Button></span>), key: '2', children: <AllRejectedDonationTable />},
                         ]}
                     />
                 </Content>
@@ -1579,7 +1583,13 @@ const DonationAndVotingSystemContractPage = () => {
         )
     }
 
-    // 总的HTML
+    const navigate = useNavigate();
+
+    const handleButtonClick = () => {
+        navigate('/'); // 跳转到<Home>组件
+    };
+
+    // 总的HTML / Total HTML
     return (
         <Layout hasSider className="site-layout">
             <Sider
@@ -1594,11 +1604,9 @@ const DonationAndVotingSystemContractPage = () => {
                 }}
                 theme="light"
             >
-                <div className="logo"><SmileFilled />Donation & Voting</div>
+                <div className="logo"><SmileFilled /><a onClick={handleButtonClick}>Donation & Voting</a></div>
                 <Menu theme="light" mode="inline" defaultSelectedKeys={['0']} items={items} onSelect={(item:any)=>{setMenuKey(item.key)}}/>
             </Sider>
-            {/* 注意下面的导航栏切换部分，需要使用两个=来判断menuKey的值，而不是三个 */}
-            {/*{menuKey === 0 ? <DonationCenter /> : (menuKey === 1 ? <UserCenter /> : menuKey)}*/}
             {menuKey == 0 ? <DonationCenter /> : (menuKey == 1 ? <UserCenter /> : <RankingList />)}
         </Layout>
     )
