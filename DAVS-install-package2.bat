@@ -1,2 +1,2 @@
-cd dsomw-fronted
+cd front-end
 npm install
