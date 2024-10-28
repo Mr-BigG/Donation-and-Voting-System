@@ -1,7 +1,6 @@
 {
   "name": "donation_and_voting_system",
   "version": "1.0.1",
-  "homepage": "https://Mr-BigG.github.io/Donation-and-Voting-System",
   "description": "Voting System based on the Solidity and React",
   "main": "index.js",
   "scripts": {
