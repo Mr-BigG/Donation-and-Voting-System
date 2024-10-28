@@ -298,7 +298,7 @@ const DonationAndVotingSystemContractPage = () => {
                         content: item.content,
                         creator: <Tag icon={<UserOutlined />} color={item.creator === account ? "blue" : (colorGroup[userAddresses.indexOf(item.creator) % 10])}>{item.creator}</Tag>,
                         votesInfo: `${_approveVotes[index]}/${_rejectVotes[index]}`,
-                        status: <Tag color="success">Already Approval</Tag>
+                        status: <Tag color="success">Approval</Tag>
                     };
                 });
 
@@ -333,7 +333,7 @@ const DonationAndVotingSystemContractPage = () => {
                         content: item.content,
                         creator: <Tag icon={<UserOutlined />} color={item.creator === account ? "blue" : (colorGroup[userAddresses.indexOf(item.creator) % 10])}>{item.creator}</Tag>,
                         votesInfo: `${_approveVotes[index]}/${_rejectVotes[index]}`,
-                        status: <Tag color="error">Already Rejected</Tag>
+                        status: <Tag color="error">Rejected</Tag>
                     };
                 });
 
@@ -514,6 +514,7 @@ const DonationAndVotingSystemContractPage = () => {
 
     // 手动领取金币奖励 / Manually claim gold rewards
     const getGoldRewardFromDonationApproved = async (id: number) => {
+        setGetReceiveGoldsSubmittedLoading(true)
         if (account === '') {
             setErrorMessage('You have not connected your wallet yet!')
             return
@@ -536,6 +537,7 @@ const DonationAndVotingSystemContractPage = () => {
         } else {
             setErrorMessage('The contract does not exist!')
         }
+        setGetReceiveGoldsSubmittedLoading(false)
     }
 
     // 手动发起新的捐赠 / Initiate a new donation manually
@@ -747,7 +749,7 @@ const DonationAndVotingSystemContractPage = () => {
                                 </Popconfirm>
                             </div>;
                     } else if (item.status === 2 && item.getGoldReward === true) {
-                        button_action = <Button icon={<DollarCircleOutlined />} onClick={() => getGoldRewardFromDonationApproved(item.id)}>Receive Golds</Button>;
+                        button_action = <Button icon={<DollarCircleOutlined />} onClick={() => getGoldRewardFromDonationApproved(item.id)} loading={getReceiveGoldsSubmittedLoading}>Receive Golds</Button>;
 
                     }
                     return {
@@ -758,7 +760,7 @@ const DonationAndVotingSystemContractPage = () => {
                         content: item.content,
                         creator: <Tag icon={<UserOutlined />} color={item.creator === account ? "blue" : (colorGroup[userAddresses.indexOf(item.creator) % 10])}>{item.creator}</Tag>,
                         votesInfo: item.votesInfo.filter((item) => {return item.behavior == 1}).length + "/" + item.votesInfo.filter((item) => {return item.behavior == 0}).length,
-                        status: (item.status == 0 ? <Tag color="processing">Voting in Progressing</Tag> : (item.status == 1 ? <Tag color="error">Already Rejected</Tag> : (item.status == 2 ? <Tag color="success">Already Approval</Tag> : <Tag color="warning">Voting Not Started</Tag>))),
+                        status: (item.status == 0 ? <Tag color="processing">In Progress</Tag> : (item.status == 1 ? <Tag color="error">Rejected</Tag> : (item.status == 2 ? <Tag color="success">Approval</Tag> : <Tag color="warning">Not Started</Tag>))),
                         action: button_action
                     }
                 }))
@@ -776,14 +778,14 @@ const DonationAndVotingSystemContractPage = () => {
                         button_action =
                             <div>
                                 <Popconfirm title={"Voting will cost at least " + goldConsumedByVote + " Golds (depending on how many times you have historically voted for that donation). Now you have " + userInfo.balance + " Golds. Are you sure to continue?"} onConfirm={() => voteOnDonation(1, item.id)} okText="Confirm" cancelText="Cancel" placement="leftTop">
-                                    <Button icon={<CheckSquareFilled />}>赞成</Button>
+                                    <Button icon={<CheckSquareFilled />}>Approve</Button>
                                 </Popconfirm>
                                 <Popconfirm title={"Voting will cost at least " + goldConsumedByVote + " Golds (depending on how many times you have historically voted for that donation). Now you have " + userInfo.balance + " Golds. Are you sure to continue?"} onConfirm={() => voteOnDonation(0, item.id)} okText="Confirm" cancelText="Cancel" placement="leftTop">
-                                    <Button icon={<CloseSquareFilled />}>反对</Button>
+                                    <Button icon={<CloseSquareFilled />}>Reject</Button>
                                 </Popconfirm>
                             </div>;
                     } else if (item.status === 2 && item.getGoldReward === true) {
-                        button_action = <Button icon={<DollarCircleOutlined />} onClick={() => getGoldRewardFromDonationApproved(item.id)}>Receive Golds</Button>;
+                        button_action = <Button icon={<DollarCircleOutlined />} onClick={() => getGoldRewardFromDonationApproved(item.id)} loading={getReceiveGoldsSubmittedLoading}>Receive Golds</Button>;
                     }
                     return {
                         key: item.id,
@@ -792,7 +794,7 @@ const DonationAndVotingSystemContractPage = () => {
                         voteEndTime: getDate(item.voteEndTime),
                         content: item.content,
                         votesInfo: <Button type="link" onClick={() => info(item.id)}>{item.votesInfo.filter((item) => {return item.behavior === 1}).length + "/" + item.votesInfo.filter((item) => {return item.behavior === 0}).length}</Button>,
-                        status: (item.status === 0 ? <Tag color="processing">Voting in Progressing</Tag> : (item.status === 1 ? <Tag color="error">Already Rejected</Tag> : (item.status === 2 ? <Tag color="success">Already Approval</Tag> : <Tag color="warning">Voting Not Started</Tag>))),
+                        status: (item.status === 0 ? <Tag color="processing">In Progress</Tag> : (item.status === 1 ? <Tag color="error">Rejected</Tag> : (item.status === 2 ? <Tag color="success">Approval</Tag> : <Tag color="warning">Not Started</Tag>))),
                         action: button_action
                     }
                 })
@@ -819,7 +821,7 @@ const DonationAndVotingSystemContractPage = () => {
                             </div>;
                     } else if (item.status === 2 && item.getGoldReward === true) {
                         button_action =
-                            <Button icon={<DollarCircleOutlined />} onClick={() => getGoldRewardFromDonationApproved(item.id)}>Receive Golds</Button>;
+                            <Button icon={<DollarCircleOutlined />} onClick={() => getGoldRewardFromDonationApproved(item.id)} loading={getReceiveGoldsSubmittedLoading}>Receive Golds</Button>;
                     }
                     return {
                         id: item.id,
@@ -828,7 +830,7 @@ const DonationAndVotingSystemContractPage = () => {
                         content: item.content,
                         creator: <Tag icon={<UserOutlined />}>{item.creator}</Tag>,
                         votesInfo: item.votesInfo,
-                        status: (item.status === 0 ? <Tag color="processing">Voting in Progressing</Tag> : (item.status === 1 ? <Tag color="error">Already Rejected</Tag> : (item.status === 2 ? <Tag color="success">Already Approval</Tag> : <Tag color="warning">Voting Not Started</Tag>))),
+                        status: (item.status === 0 ? <Tag color="processing">In Progress</Tag> : (item.status === 1 ? <Tag color="error">Rejected</Tag> : (item.status === 2 ? <Tag color="success">Approval</Tag> : <Tag color="warning">Not Started</Tag>))),
                         action: button_action
                     }
                 })
@@ -1331,6 +1333,7 @@ const DonationAndVotingSystemContractPage = () => {
     const [getGoldSubmittedLoading, setGetGoldSubmittedLoading] = useState(false)
     const [getETHSubmittedLoading, setGetETHSubmittedLoading] = useState(false)
     const [getAwardRewardSubmittedLoading, setGetAwardRewardSubmittedLoading] = useState(false)
+    const [getReceiveGoldsSubmittedLoading, setGetReceiveGoldsSubmittedLoading] = useState(false)
 
     const showModal = () => {
         setOpen(true)

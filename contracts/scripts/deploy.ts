@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 
 async function main() {
   const DonationAndVotingSystemContract = await ethers.getContractFactory("DonationAndVotingSystemContract");
-  const DonationAndVotingSystemContract_obj = await DonationAndVotingSystemContract.deploy(3, 1000, 100, 10000, );
+  const DonationAndVotingSystemContract_obj = await DonationAndVotingSystemContract.deploy(10, 1000, 100, 10000, );
   await DonationAndVotingSystemContract_obj.deployed();
 
   // console.log(`合约 DonationAndVotingSystemContract 已成功部署在 ${DonationAndVotingSystemContract_obj.address}`);
