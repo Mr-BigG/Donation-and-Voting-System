@@ -1,6 +1,6 @@
 ## This is the group project for EE4032
 
-## Sepolia: You can access to this project by clicking [here](http://39.106.52.235:3000)
+## Sepolia: You can access to this project by clicking [here (temp website)](http://39.106.52.235) or [here (official website, audit in progress)](http://www.letusdonate.asia)
 ## Ethereum: You can access to this project by clicking [here] (in progress)
 
 
