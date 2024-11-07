@@ -31,7 +31,7 @@ const config: HardhatUserConfig = {
     sepolia_alchemy: {
       url:'https://eth-sepolia.g.alchemy.com/v2/OXRZlzs7oGOxCQ_BFlOYnCulvVt3RTuo', // 公共网络——Sepolia-alchemy区块链端口
 
-      accounts: ['e6bfde08f3c60de5082201d378209a1ae6c457a5ecbca2a7c1d39ae86999d22f',], // 钱包的私钥地址
+      accounts: ['',], // 钱包的私钥地址
       // gasPrice: 3000000000, // 20 gwei (这是一个示例，可以根据需要调整)
       // gas: 6000000, // 2100000 gas limit (这是一个示例，可以根据需要调整)
     }

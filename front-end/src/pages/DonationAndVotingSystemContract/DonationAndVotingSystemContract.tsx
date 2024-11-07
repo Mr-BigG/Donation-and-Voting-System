@@ -1405,7 +1405,7 @@ const DonationAndVotingSystemContractPage = () => {
                     <div className="toolBar">
                         <Row justify="space-around" align="middle">
                             <Col span={20}>
-                                <Popconfirm title={"Submitting a donation will consume " + goldConsumedByDonation + " Golds. Now you have " + userInfo.balance + " Golds. Are you sure to continue?"} onConfirm={showModal} okText="Confirm" cancelText="Cancel" placement="top">
+                                <Popconfirm title={"Submitting a donation will consume " + goldConsumedByDonation + " Golds. Now you have " + userInfo.balance + " Golds. Are you sure to continue?"} onConfirm={showModal} okText="Confirm" cancelText="Cancel" placement="top" disabled={account === "" || userInfo.balance < 1000}>
                                     {account === "" ? <Button type="primary" size="large" shape="round" icon={<ExclamationCircleFilled />} disabled={true}>You have not connected your wallet</Button> : account !== "" && userInfo.balance >= 1000 ? <Button type="primary" size="large" shape="round" icon={<DiffTwoTone />}>Submit Donation</Button> : <Button type="primary" size="large" shape="round" icon={<FileAddOutlined />} disabled={true}>Your balance is less than 1000 golds</Button>}
                                 </Popconfirm>
                             </Col>

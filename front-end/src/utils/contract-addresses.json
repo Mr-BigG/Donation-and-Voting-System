@@ -1,5 +1,5 @@
 {
-  "DonationAndVotingSystemContract": "0x8e0d6E320dc50711ae824790ed6ed5c0c52C64aA",
-  "GoldContract": "0x95f9aE1dc067430a236D074cc4a495a3E9114B00",
-  "AwardContract": "0x03E21330D69B7ceCFa984E89418d6865B5934E85"
+  "DonationAndVotingSystemContract": "0x8A68842415E4A4eD76381066bDDEA977723b505C",
+  "GoldContract": "0xDe16057373C09aDA2bb81066573d08DBe7910A32",
+  "AwardContract": "0x8afacD53c811E75AEe02d6e45748ff70C4Bb9d27"
 }
