@@ -1,8 +1,8 @@
 ## This is the group project for NUS EE4032
 
-:warning:__Warning: Due to the large amount of code in our project and the large number of components and dependencies we use, we are not able to deploy to Github Pages. But you can access our project at the links given below, and the effect is the same. (We use Alibaba could server to achieve this requirement that allow everyone can access our project. )__
-### :sparkles:Sepolia: You can access our project by clicking [here (temp website)](http://47.243.53.79) or [here (official website)](http://www.letusdonate.xyz)
-### :fire:Ethereum: You can access our project by clicking [here] (in progress)
+:warning:__Warning: You can access our project at the links given below.__
+### :sparkles:Sepolia: You can access our project by clicking [here (official website)](http://www.letusdonate.xyz) or [here (temp website)](http://47.243.53.79)
+### :fire:Ethereum: You can access our project by clicking [here] (in progress) (Once we have raised enough ETH, we will launch our website on the Ethereum mainnet)
 
 
 ## The project file structure is as follows
