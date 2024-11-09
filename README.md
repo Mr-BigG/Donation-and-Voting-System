@@ -1,7 +1,7 @@
 ## This is the group project for NUS EE4032
 
 :warning:__Warning: You can access our project at the links given below.__
-### :sparkles:Sepolia: You can access our project by clicking [here (official website)](http://www.letusdonate.xyz) or [here (temp website)](http://47.243.53.79)
+### :sparkles:Sepolia: You can access our project by clicking [here (official website)](http://www.letusdonate.xyz) or [here (temporary website)](http://47.243.53.79)
 ### :fire:Ethereum: You can access our project by clicking [here] (in progress) (Once we have raised enough ETH, we will launch our website on the Ethereum mainnet)
 
 
