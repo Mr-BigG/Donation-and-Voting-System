@@ -55,7 +55,7 @@
     2. If you are using **Sepolia**, following the instructions in the figure to configure it. ![img_10.png](imgs/img_10.png)
 8. Add the configuration to run the front-end program, as shown in the figure. ![img_11.png](imgs/img_11.png)
 9. Deploy contracts to a blockchain network.
-    1. If you are using _Ganache_, run the deploy-ganache you just configured.
+    1. If you are using **Ganache**, run the deploy-ganache you just configured.
         1. A terminal will run and you will see the addresses of the three contracts, copy them, as shown in the figure. ![img_12.png](imgs/img_12.png)
         2. Open the front-end/src/utils/contract-addresses.json file in the project and fill in the addresses you just copied into the following code.
             ``` json
@@ -65,9 +65,9 @@
                  "AwardContract": "0x123454321"
              }
             ```
-   2.If you are using Sepolia, run the deploy-sepolia you just configured.
-    1. A terminal will run and you will see the addresses of the three contracts, copy them, as shown in the figure. ![img_12.png](imgs/img_12.png)
-    2. Open the front-end/src/utils/contract-addresses.json file in the project and fill in the addresses you just copied into the following code.
+   2. If you are using **Sepolia**, run the deploy-sepolia you just configured.
+      1. A terminal will run and you will see the addresses of the three contracts, copy them, as shown in the figure. ![img_12.png](imgs/img_12.png)
+      2. Open the front-end/src/utils/contract-addresses.json file in the project and fill in the addresses you just copied into the following code.
         ``` json
          {
              "DonationAndVotingSystemContract": "0x123456789",
